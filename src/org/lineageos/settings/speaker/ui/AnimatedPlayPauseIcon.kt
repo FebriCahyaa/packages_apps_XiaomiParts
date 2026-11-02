@@ -6,10 +6,9 @@
 
 package org.lineageos.settings.speaker.ui
 
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,13 +28,13 @@ fun AnimatedPlayPauseIcon(
 ) {
     val fraction by animateFloatAsState(
         targetValue = if (isPlaying) 1f else 0f,
-        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "play_pause_fraction"
     )
     
     val rotation by animateFloatAsState(
         targetValue = if (isPlaying) 90f else 0f,
-        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "play_pause_rotation"
     )
 

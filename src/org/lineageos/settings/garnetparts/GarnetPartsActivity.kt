@@ -30,9 +30,6 @@ class GarnetPartsActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            // [Predictive Back §4] Replace raw onBackPressed = { finish() } with BackHandler
-            // so the Android 14+ (API 34+) OnBackPressedDispatcher predictive back gesture
-            // animation runs correctly before the activity finishes.
             BackHandler {
                 finish()
             }

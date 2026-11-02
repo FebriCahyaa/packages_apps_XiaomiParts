@@ -18,7 +18,6 @@ package org.lineageos.settings;
 
 public class Constants {
 
-    // Saturation
     public static final String KEY_SATURATION = "saturation";
     public static final String KEY_SATURATION_PREVIEW = "saturation_preview";
 }

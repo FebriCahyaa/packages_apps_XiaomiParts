@@ -137,15 +137,12 @@ public class CustomSeekBarPreference extends Preference implements SeekBar.OnSee
         super.onBindViewHolder(holder);
         try
         {
-            // move our seekbar to the new view we've been given
             ViewParent oldContainer = mSeekBar.getParent();
             ViewGroup newContainer = (ViewGroup) holder.findViewById(R.id.seekbar);
             if (oldContainer != newContainer) {
-                // remove the seekbar from the old view
                 if (oldContainer != null) {
                     ((ViewGroup) oldContainer).removeView(mSeekBar);
                 }
-                // remove the existing seekbar (there may not be one) and add ours
                 newContainer.removeAllViews();
                 newContainer.addView(mSeekBar, ViewGroup.LayoutParams.FILL_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -270,7 +267,6 @@ public class CustomSeekBarPreference extends Preference implements SeekBar.OnSee
     }
 
     protected void changeValue(int newValue) {
-        // for subclasses
     }
 
     @Override
@@ -280,12 +276,10 @@ public class CustomSeekBarPreference extends Preference implements SeekBar.OnSee
             mTrackingValue = newValue;
             updateValueViews();
         } else if (mValue != newValue) {
-            // change rejected, revert to the previous value
             if (!callChangeListener(newValue)) {
                 mSeekBar.setProgress(getSeekValue(mValue));
                 return;
             }
-            // change accepted, store it
             changeValue(newValue);
             persistInt(newValue);
 
@@ -362,7 +356,6 @@ public class CustomSeekBarPreference extends Preference implements SeekBar.OnSee
     }
 
     public void refresh(int newValue) {
-        // this will ...
         setValue(newValue, mSeekBar != null);
     }
 }

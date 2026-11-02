@@ -18,17 +18,9 @@
 package org.lineageos.settings;
 
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.database.ContentObserver;
 import android.hardware.display.DisplayManager;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.UserHandle;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.Display;
 import android.view.Display.HdrCapabilities;
@@ -36,10 +28,6 @@ import android.view.Display.HdrCapabilities;
 import org.lineageos.settings.chargeboost.ChargeBoostUtils;
 import org.lineageos.settings.thermal.ThermalUtils;
 import org.lineageos.settings.refreshrate.RefreshUtils;
-
-import androidx.preference.PreferenceManager;
-
-import org.lineageos.settings.utils.FileUtils;
 
 public class BootCompletedReceiver extends BroadcastReceiver {
     private static final boolean DEBUG = false;
@@ -49,24 +37,17 @@ public class BootCompletedReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, Intent intent) {
         if (DEBUG) Log.i(TAG, "Received intent: " + intent.getAction());
         switch (intent.getAction()) {
-            case Intent.ACTION_LOCKED_BOOT_COMPLETED:
-                handleLockedBootCompleted(context);
-                break;
-            case Intent.ACTION_BOOT_COMPLETED:
-                handleBootCompleted(context);
-                break;
+            case Intent.ACTION_LOCKED_BOOT_COMPLETED -> handleLockedBootCompleted(context);
+            case Intent.ACTION_BOOT_COMPLETED -> handleBootCompleted();
+            default -> {}
         }
-        
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     private void handleLockedBootCompleted(Context context) {
         if (DEBUG) Log.i(TAG, "Handling locked boot completed.");
         try {
-            // Start necessary services
             startServices(context);
 
-            // Override HDR types
             overrideHdrTypes(context);
 
         } catch (Exception e) {
@@ -74,24 +55,21 @@ public class BootCompletedReceiver extends BroadcastReceiver {
         }
     }
 
-    private void handleBootCompleted(Context context) {
+    private void handleBootCompleted() {
         if (DEBUG) Log.i(TAG, "Handling boot completed.");
-        // Add additional boot-completed actions if needed
     }
 
     private void startServices(Context context) {
         if (DEBUG) Log.i(TAG, "Starting services...");
 
-        // Start Thermal Management Services
         ThermalUtils.getInstance(context).startService();
-
-        // Start Refresh Rate Services
         RefreshUtils.startService(context);
 
         // Restore the wired charge boost and keep it applied across charger plug-ins
         ChargeBoostUtils.startService(context);
     }
 
+    @SuppressWarnings("AndroidFrameworkRequiresPermission")
     private void overrideHdrTypes(Context context) {
         try {
             final DisplayManager dm = context.getSystemService(DisplayManager.class);

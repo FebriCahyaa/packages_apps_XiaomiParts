@@ -17,7 +17,6 @@
 
 package org.lineageos.settings.saturation
 
-import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.os.IBinder
@@ -28,50 +27,64 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.AddToHomeScreen
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddToHomeScreen
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -79,9 +92,19 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.launch
 import org.lineageos.settings.Constants
 import org.lineageos.settings.R
+import org.lineageos.settings.ui.components.GarnetPageHeading
+import org.lineageos.settings.ui.components.GarnetTopAppBar
+import org.lineageos.settings.ui.theme.ExpressiveMotion
+import org.lineageos.settings.ui.theme.ExpressiveShapes
+import org.lineageos.settings.ui.theme.ExpressiveTheme
+import org.lineageos.settings.ui.theme.ExpressiveTypography
+import org.lineageos.settings.ui.theme.expressiveBounceClick
 import org.lineageos.settings.utils.TileUtils
+import org.lineageos.settings.utils.rememberHapticFeedback
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 class SaturationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,7 +114,7 @@ class SaturationActivity : ComponentActivity() {
         controller.restore()
 
         setContent {
-            SaturationTheme {
+            ExpressiveTheme {
                 BackHandler { finish() }
                 SaturationScreen(
                     initialValue = controller.value,
@@ -153,7 +176,7 @@ private class SaturationController(context: Context) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun SaturationScreen(
     initialValue: Int,
@@ -162,27 +185,32 @@ private fun SaturationScreen(
     onAddTile: () -> Unit,
     onBackPressed: () -> Unit,
 ) {
+    val previewImages = remember {
+        listOf(
+            R.drawable.image_preview1,
+            R.drawable.image_preview2,
+            R.drawable.image_preview3,
+        )
+    }
     var value by remember { mutableIntStateOf(initialValue) }
-    var page by remember { mutableIntStateOf(0) }
-    var menuExpanded by remember { mutableStateOf(false) }
-    val previewImages = listOf(
-        R.drawable.image_preview1,
-        R.drawable.image_preview2,
-        R.drawable.image_preview3,
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { previewImages.size }
     )
+    var menuExpanded by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val showTitle by remember {
+        androidx.compose.runtime.derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 80
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.saturation_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBackPressed) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.garnet_navigate_back),
-                        )
-                    }
-                },
+            GarnetTopAppBar(
+                title = stringResource(R.string.saturation_title),
+                showTitle = showTitle,
+                onBack = onBackPressed,
                 actions = {
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(
@@ -193,11 +221,12 @@ private fun SaturationScreen(
                     DropdownMenu(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
+                        modifier = Modifier.clip(ExpressiveShapes.ShapeLarge)
                     ) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.tile_add)) },
                             leadingIcon = {
-                                Icon(Icons.Default.AddToHomeScreen, contentDescription = null)
+                                Icon(Icons.AutoMirrored.Filled.AddToHomeScreen, contentDescription = null)
                             },
                             onClick = {
                                 menuExpanded = false
@@ -211,6 +240,7 @@ private fun SaturationScreen(
         containerColor = MaterialTheme.colorScheme.surface,
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = padding.calculateTopPadding() + 8.dp,
@@ -221,17 +251,25 @@ private fun SaturationScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                PreviewCarousel(
-                    images = previewImages,
-                    page = page,
-                    onPageChanged = { page = it },
+                GarnetPageHeading(
+                    title = stringResource(R.string.saturation_title),
+                    subtitle = stringResource(R.string.garnet_display_labs_summary),
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
+
             item {
-                Surface(
+                PreviewCarousel(
+                    images = previewImages,
+                    pagerState = pagerState,
+                )
+            }
+
+            item {
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    shape = MaterialTheme.shapes.large,
+                    shape = ExpressiveShapes.ShapeExtraLarge,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
@@ -242,13 +280,23 @@ private fun SaturationScreen(
                             Text(
                                 text = stringResource(R.string.saturation_title),
                                 style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                            Text(
-                                text = stringResource(R.string.custom_seekbar_value, "$value%"),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                            Surface(
+                                shape = ExpressiveShapes.ShapeFull,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ) {
+                                Text(
+                                    text = "$value%",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         val saturationDescription = stringResource(R.string.saturation_title)
                         Slider(
                             value = value.toFloat(),
@@ -267,75 +315,138 @@ private fun SaturationScreen(
                                     contentDescription = saturationDescription
                                 },
                         )
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Text("0%", style = MaterialTheme.typography.labelMedium)
-                            Text("100%", style = MaterialTheme.typography.labelMedium)
-                            Text("200%", style = MaterialTheme.typography.labelMedium)
+                            Text("0%", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("100%", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("200%", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        IconButton(
-                            onClick = {
-                                value = 100
-                                onReset()
-                            },
-                            modifier = Modifier.align(Alignment.End),
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = stringResource(
-                                    R.string.saturation_reset,
-                                ),
-                            )
+                            listOf(
+                                50 to "Natural",
+                                100 to "Default",
+                                140 to "Vibrant"
+                            ).forEach { (presetVal, presetName) ->
+                                AssistChip(
+                                    onClick = {
+                                        value = presetVal
+                                        onValueChanged(presetVal)
+                                    },
+                                    label = { Text(presetName, style = MaterialTheme.typography.labelSmall) },
+                                    shape = ExpressiveShapes.ShapeSmall,
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = if (value == presetVal) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,
+                                        labelColor = if (value == presetVal) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            IconButton(
+                                onClick = {
+                                    value = 100
+                                    onReset()
+                                },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = stringResource(R.string.saturation_reset),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
+
             item {
-                Text(
-                    text = stringResource(R.string.saturation_footer_summary),
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = ExpressiveShapes.ShapeLarge,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.saturation_footer_summary),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PreviewCarousel(
     images: List<Int>,
-    page: Int,
-    onPageChanged: (Int) -> Unit,
+    pagerState: PagerState,
 ) {
-    Surface(
+    val coroutineScope = rememberCoroutineScope()
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = ExpressiveShapes.ShapeExtraLarge,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column {
-            Image(
-                painter = painterResource(images[page]),
-                contentDescription = stringResource(R.string.image_preview_content_description),
+        Column(modifier = Modifier.padding(8.dp)) {
+            val innerShape = ExpressiveShapes.opticalInnerShape(ExpressiveShapes.CornerExtraLarge, 8.dp)
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(320.dp)
-                    .clip(MaterialTheme.shapes.large),
-                contentScale = ContentScale.Crop,
-            )
+                    .height(290.dp)
+                    .clip(innerShape),
+            ) { pageIndex ->
+                Image(
+                    painter = painterResource(images[pageIndex]),
+                    contentDescription = stringResource(R.string.image_preview_content_description),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 IconButton(
-                    onClick = { onPageChanged(page - 1) },
-                    enabled = page > 0,
+                    onClick = {
+                        if (pagerState.currentPage > 0) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                            }
+                        }
+                    },
+                    enabled = pagerState.currentPage > 0,
                 ) {
                     Icon(
                         imageVector = Icons.Default.ChevronLeft,
@@ -344,25 +455,49 @@ private fun PreviewCarousel(
                         ),
                     )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     images.indices.forEach { index ->
+                        val isSelected = index == pagerState.currentPage
+                        val indicatorWidth by animateDpAsState(
+                            targetValue = if (isSelected) 24.dp else 8.dp,
+                            animationSpec = ExpressiveMotion.spatialFast(),
+                            label = "indicator_width_$index"
+                        )
+                        val indicatorColor by animateColorAsState(
+                            targetValue = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant
+                            },
+                            animationSpec = ExpressiveMotion.effectsDefault(),
+                            label = "indicator_color_$index"
+                        )
+
                         Box(
                             modifier = Modifier
-                                .size(if (index == page) 10.dp else 8.dp)
+                                .height(8.dp)
+                                .width(indicatorWidth)
                                 .background(
-                                    color = if (index == page) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.outlineVariant
-                                    },
+                                    color = indicatorColor,
                                     shape = CircleShape,
                                 ),
                         )
                     }
                 }
+
                 IconButton(
-                    onClick = { onPageChanged(page + 1) },
-                    enabled = page < images.lastIndex,
+                    onClick = {
+                        if (pagerState.currentPage < images.lastIndex) {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        }
+                    },
+                    enabled = pagerState.currentPage < images.lastIndex,
                 ) {
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
@@ -374,30 +509,4 @@ private fun PreviewCarousel(
             }
         }
     }
-}
-
-@Composable
-private fun SaturationTheme(content: @Composable () -> Unit) {
-    val context = LocalContext.current
-    val darkTheme = androidx.compose.foundation.isSystemInDarkTheme()
-    val colorScheme = when {
-        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S ->
-            if (darkTheme) {
-                androidx.compose.material3.dynamicDarkColorScheme(context)
-            } else {
-                androidx.compose.material3.dynamicLightColorScheme(context)
-            }
-        darkTheme -> androidx.compose.material3.darkColorScheme()
-        else -> androidx.compose.material3.lightColorScheme()
-    }
-    val view = androidx.compose.ui.platform.LocalView.current
-    if (!view.isInEditMode) {
-        androidx.compose.runtime.SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.surface.toArgb()
-            androidx.core.view.WindowCompat.getInsetsController(window, view)
-                .isAppearanceLightStatusBars = !darkTheme
-        }
-    }
-    MaterialTheme(colorScheme = colorScheme, content = content)
 }

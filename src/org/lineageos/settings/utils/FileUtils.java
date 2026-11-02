@@ -30,7 +30,6 @@ public final class FileUtils {
     private static final String TAG = "FileUtils";
 
     private FileUtils() {
-        // This class is not supposed to be instantiated
     }
 
     /**
@@ -55,8 +54,8 @@ public final class FileUtils {
                 if (reader != null) {
                     reader.close();
                 }
-            } catch (IOException e) {
-                // Ignored, not much we can do anyway
+            } catch (IOException ignored) {
+                // Safe to ignore on stream close
             }
         }
 
@@ -85,8 +84,8 @@ public final class FileUtils {
                 if (writer != null) {
                     writer.close();
                 }
-            } catch (IOException e) {
-                // Ignored, not much we can do anyway
+            } catch (IOException ignored) {
+                // Safe to ignore on stream close
             }
         }
 

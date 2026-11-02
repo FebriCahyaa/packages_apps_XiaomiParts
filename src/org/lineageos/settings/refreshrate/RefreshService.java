@@ -54,8 +54,8 @@ public class RefreshService extends Service {
         try {
             mActivityTaskManager = ActivityTaskManager.getService();
             mActivityTaskManager.registerTaskStackListener(mTaskListener);
-        } catch (RemoteException e) {
-            // Do nothing
+        } catch (RemoteException ignored) {
+            // Task stack listener unavailable
         }
         mRefreshUtils = new RefreshUtils(this);
         registerReceiver();
@@ -99,14 +99,13 @@ public class RefreshService extends Service {
                     mRefreshUtils.setRefreshRate(foregroundApp);
                     mPreviousApp = foregroundApp;
                 }
-                // Check if it's a landscape mode state
                 if ((state == RefreshUtils.STATE_60_LAND || 
                      state == RefreshUtils.STATE_90_LAND || 
                      state == RefreshUtils.STATE_120_LAND) && mRefreshUtils.isAppInList) {
                     mRefreshUtils.checkOrientationAndSetRate(foregroundApp);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "Error handling foreground app refresh rate", e);
             }
         }
     };

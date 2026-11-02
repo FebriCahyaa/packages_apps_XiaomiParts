@@ -19,7 +19,6 @@ class GpuManagerUtils {
         private const val GPU_BASE_PATH = "/sys/class/kgsl/kgsl-3d0"
         private const val DEFAULT_GOVERNOR = "msm-adreno-tz"
         
-        // GPU paths
         private const val GPU_MODEL = "$GPU_BASE_PATH/gpu_model"
         private const val GPU_AVAILABLE_FREQUENCIES = "$GPU_BASE_PATH/gpu_available_frequencies"
         private const val GPU_CURRENT_FREQ = "$GPU_BASE_PATH/gpuclk"

@@ -44,11 +44,10 @@ public class Startup extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(action) || 
             Intent.ACTION_REBOOT.equals(action)) {
 
-            // Adding a delay before applying the saturation
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 Log.d(TAG, "Applying saved saturation setting...");
                 applySavedSaturation(context);
-            }, 5000); // Delay of 5 seconds
+            }, 5000);
         }
     }
 
@@ -57,7 +56,6 @@ public class Startup extends BroadcastReceiver {
         int seekBarValue = sharedPrefs.getInt(Constants.KEY_SATURATION, 100);
         Log.d(TAG, "Retrieved seekBarValue: " + seekBarValue);
 
-        // Apply the saved saturation value
         applySaturation(seekBarValue);
     }
 

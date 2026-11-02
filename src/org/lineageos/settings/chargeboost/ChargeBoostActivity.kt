@@ -1,67 +1,72 @@
 /*
  * SPDX-FileCopyrightText: The Evolution X Project
+ *                         2026 zylhdrXP
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.lineageos.settings.chargeboost
 
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.lineageos.settings.R
+import org.lineageos.settings.ui.components.GarnetPageHeading
+import org.lineageos.settings.ui.components.GarnetTopAppBar
+import org.lineageos.settings.ui.components.ModernSettingSwitch
+import org.lineageos.settings.ui.components.connectedItemShape
+import org.lineageos.settings.ui.components.squishable
+import org.lineageos.settings.ui.theme.ExpressiveMotion
+import org.lineageos.settings.ui.theme.ExpressiveShapes
+import org.lineageos.settings.ui.theme.ExpressiveTheme
 
 class ChargeBoostActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ChargeBoostTheme {
+            ExpressiveTheme {
                 ChargeBoostScreen(
                     onBack = { finish() }
                 )
             }
         }
     }
-}
-
-@Composable
-fun ChargeBoostTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
-) {
-    val context = LocalContext.current
-    val colorScheme = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> darkColorScheme()
-        else -> lightColorScheme()
-    }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        content = content
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,147 +78,139 @@ fun ChargeBoostScreen(
     val supported = remember { ChargeBoostUtils.isSupported() }
     var boost by remember { mutableStateOf(ChargeBoostUtils.isEnabled(context)) }
     var forceAuth by remember { mutableStateOf(ChargeBoostUtils.isForceAuthEnabled(context)) }
-
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollState = rememberScrollState()
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.charge_boost_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.garnet_navigate_back)
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
+            GarnetTopAppBar(
+                title = stringResource(R.string.charge_boost_title),
+                showTitle = scrollState.value > 120,
+                onBack = onBack,
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            GarnetPageHeading(
+                title = stringResource(R.string.charge_boost_title),
+                subtitle = stringResource(R.string.charge_boost_summary),
+                modifier = Modifier.padding(top = 8.dp),
+            )
 
-            // Main Settings Card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .squishable(enabled = true, scaleDown = 0.985f),
                 shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
             ) {
-                Column(
-                    modifier = Modifier.padding(vertical = 8.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Charge Boost Switch Row
-                    Row(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.large)
-                            .toggleable(
-                                value = boost && supported,
-                                enabled = supported,
-                                role = Role.Switch,
-                                onValueChange = { checked ->
-                                    ChargeBoostUtils.setEnabled(context, checked)
-                                    boost = checked
-                                }
-                            )
-                            .padding(horizontal = 20.dp, vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .size(52.dp)
+                            .background(
+                                color = if (boost && supported) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                shape = ExpressiveShapes.ShapeMedium,
+                            ),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.charge_boost_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(
-                                    if (supported) R.string.charge_boost_switch_summary
-                                    else R.string.charge_boost_unsupported
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = boost && supported,
-                            onCheckedChange = null,
-                            enabled = supported
+                        Icon(
+                            imageVector = Icons.Filled.Bolt,
+                            contentDescription = null,
+                            tint = if (boost && supported) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(28.dp),
                         )
                     }
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
-
-                    // Force charger authentication Switch Row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.large)
-                            .toggleable(
-                                value = forceAuth && supported,
-                                enabled = supported && boost,
-                                role = Role.Switch,
-                                onValueChange = { checked ->
-                                    ChargeBoostUtils.setForceAuthEnabled(context, checked)
-                                    forceAuth = checked
-                                }
-                            )
-                            .padding(horizontal = 20.dp, vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.charge_boost_force_auth_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.charge_boost_force_auth_summary),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = forceAuth && supported,
-                            onCheckedChange = null,
-                            enabled = supported && boost
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (boost && supported) "Fast Charging Boosted" else "Standard Charging",
+                            style = MaterialTheme.typography.titleMediumEmphasized,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (supported) "Thermal guard active (cutoff at 42°C)" else "Hardware unsupported",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
 
-            // Footer note
-            Text(
-                text = stringResource(R.string.charge_boost_footer),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                ModernSettingSwitch(
+                    title = stringResource(R.string.charge_boost_title),
+                    subtitle = stringResource(
+                        if (supported) R.string.charge_boost_switch_summary
+                        else R.string.charge_boost_unsupported
+                    ),
+                    checked = boost && supported,
+                    onCheckedChange = { checked ->
+                        if (supported) {
+                            ChargeBoostUtils.setEnabled(context, checked)
+                            boost = checked
+                        }
+                    },
+                    shape = connectedItemShape(0, 2),
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                ModernSettingSwitch(
+                    title = stringResource(R.string.charge_boost_force_auth_title),
+                    subtitle = stringResource(R.string.charge_boost_force_auth_summary),
+                    checked = forceAuth && supported && boost,
+                    onCheckedChange = { checked ->
+                        if (supported && boost) {
+                            ChargeBoostUtils.setForceAuthEnabled(context, checked)
+                            forceAuth = checked
+                        }
+                    },
+                    shape = connectedItemShape(1, 2),
+                )
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.charge_boost_footer),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

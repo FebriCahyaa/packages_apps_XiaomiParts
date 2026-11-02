@@ -49,7 +49,6 @@ fun BypassChargingAnimation(
         label = "StateTransition"
     )
 
-    // Fast moving energy phase
     val energyPhase by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1000f,
@@ -60,7 +59,6 @@ fun BypassChargingAnimation(
         label = "EnergyPhase"
     )
 
-    // CPU Pulsing
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.95f,
         targetValue = 1.05f,
@@ -73,6 +71,7 @@ fun BypassChargingAnimation(
 
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.tertiary
+    val particleColor = MaterialTheme.colorScheme.onPrimaryContainer
     val surfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
     val onSurface = MaterialTheme.colorScheme.onSurface
     
@@ -92,12 +91,10 @@ fun BypassChargingAnimation(
             val height = size.height
             val centerX = width / 2
             
-            // Layout Coordinates
             val cpuY = height * cpuYRatio
             val batteryY = height * batteryYRatio
             val chargerY = height * chargerYRatio
 
-            // Draw Paths around Battery
             val curveSpread = 90.dp.toPx()
             val curveHeight = 40.dp.toPx()
             
@@ -131,17 +128,14 @@ fun BypassChargingAnimation(
             
             val directPath = Path().apply {
                 moveTo(centerX, chargerY)
-                lineTo(centerX, batteryY + 30.dp.toPx()) // Base to battery
+                lineTo(centerX, batteryY + 30.dp.toPx())
             }
 
-            // Draw base tracks
             drawPath(pathLeft, surfaceVariant, style = Stroke(4.dp.toPx(), cap = StrokeCap.Round))
             drawPath(pathRight, surfaceVariant, style = Stroke(4.dp.toPx(), cap = StrokeCap.Round))
             drawPath(directPath, surfaceVariant, style = Stroke(4.dp.toPx(), cap = StrokeCap.Round))
 
-            // Draw flowing energy
             if (stateTransition > 0.01f) {
-                // Outer Glow Layer
                 val glowStyle = Stroke(
                     width = 14.dp.toPx(),
                     cap = StrokeCap.Round,
@@ -150,7 +144,6 @@ fun BypassChargingAnimation(
                 drawPath(pathLeft, primaryColor.copy(alpha = 0.25f * stateTransition), style = glowStyle)
                 drawPath(pathRight, secondaryColor.copy(alpha = 0.25f * stateTransition), style = glowStyle)
 
-                // Core Layer
                 val coreStyle = Stroke(
                     width = 5.dp.toPx(),
                     cap = StrokeCap.Round,
@@ -159,18 +152,16 @@ fun BypassChargingAnimation(
                 drawPath(pathLeft, primaryColor.copy(alpha = stateTransition), style = coreStyle)
                 drawPath(pathRight, secondaryColor.copy(alpha = stateTransition), style = coreStyle)
                 
-                // Fast particles
                 val particleStyle = Stroke(
                     width = 8.dp.toPx(),
                     cap = StrokeCap.Round,
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 200f), -energyPhase * 2.5f)
                 )
-                drawPath(pathLeft, Color.White.copy(alpha = stateTransition * 0.9f), style = particleStyle)
-                drawPath(pathRight, Color.White.copy(alpha = stateTransition * 0.9f), style = particleStyle)
+                drawPath(pathLeft, particleColor.copy(alpha = stateTransition * 0.9f), style = particleStyle)
+                drawPath(pathRight, particleColor.copy(alpha = stateTransition * 0.9f), style = particleStyle)
             } 
             
             if (stateTransition < 0.99f) {
-                // Normal charging flow to battery
                 val chargingStyle = Stroke(
                     width = 6.dp.toPx(),
                     cap = StrokeCap.Round,
@@ -179,7 +170,6 @@ fun BypassChargingAnimation(
                 drawPath(directPath, primaryColor.copy(alpha = 1f - stateTransition), style = chargingStyle)
             }
 
-            // Draw Source Port
             drawRoundRect(
                 color = if (isBypassing) secondaryColor else primaryColor,
                 topLeft = Offset(centerX - 16.dp.toPx(), chargerY),
@@ -188,9 +178,6 @@ fun BypassChargingAnimation(
             )
         }
 
-        // Icons layered over Canvas
-        
-        // CPU Icon
         Icon(
             imageVector = Icons.Rounded.Memory,
             contentDescription = "CPU",
@@ -201,7 +188,6 @@ fun BypassChargingAnimation(
             tint = if (isBypassing) primaryColor else surfaceVariant
         )
 
-        // Battery Icon
         Icon(
             imageVector = Icons.Rounded.Battery0Bar,
             contentDescription = "Battery",

@@ -159,9 +159,10 @@
     <!-- Garnet Parts -->
     <string name="garnet_parts_title">Garnet Parts</string>
     <string name="garnet_parts_summary">Hardware controls</string>
-    <string name="garnet_parts_description">Adjust CPU, GPU, thermal, display, charging, and speaker settings.</string>
+    <string name="garnet_parts_description">Hardware controls</string>
     <string name="garnet_dashboard_title">GARNET PARTS</string>
     <string name="garnet_dashboard_subtitle">HARDWARE CONTROLS</string>
+    <string name="garnet_hardware_engines">HARDWARE ENGINES</string>
     <string name="garnet_system_utilities">SYSTEM UTILITIES</string>
     <string name="garnet_navigate_back">Navigate back</string>
     <string name="garnet_open_feature">Open %s</string>

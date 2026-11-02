@@ -49,7 +49,6 @@ class ThermalViewModel(
         }
 
         override fun onPackageChanged(packageName: String, user: UserHandle) {
-            // No action needed
         }
 
         override fun onPackagesAvailable(
@@ -57,7 +56,6 @@ class ThermalViewModel(
             user: UserHandle,
             replacing: Boolean
         ) {
-            // No action needed
         }
 
         override fun onPackagesUnavailable(
@@ -65,20 +63,16 @@ class ThermalViewModel(
             user: UserHandle,
             replacing: Boolean
         ) {
-            // No action needed
         }
     }
 
     init {
-        // Initialize with current thermal state
         _uiState.update { it.copy(isEnabled = thermalUtils.enabled) }
         
-        // Load apps if thermal is enabled
         if (thermalUtils.enabled) {
             loadApps()
         }
         
-        // Register launcher apps callback on IO thread to avoid blocking
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 launcherApps.registerCallback(launcherAppsCallback)
@@ -103,7 +97,6 @@ class ThermalViewModel(
         Logging.d(TAG, "updateAppThermalState: $packageName -> $state")
         thermalUtils.writePackage(packageName, state.id)
         
-        // Update UI state
         _uiState.update { currentState ->
             currentState.copy(
                 apps = currentState.apps.map { app ->
@@ -190,12 +183,10 @@ class ThermalViewModel(
             )
             
             _uiState.update { currentState ->
-                // Check if app already exists
                 if (currentState.apps.any { it.packageName == packageName }) {
                     return@update currentState
                 }
                 
-                // Insert in sorted position
                 val updatedApps = (currentState.apps + newApp)
                     .sortedBy { it.label.lowercase() }
                 

@@ -1,5 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2025 Paranoid Android
+ *                         2026 zylhdrXP
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,14 +8,22 @@ package org.lineageos.settings.thermal.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -25,22 +34,47 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.lineageos.settings.R
 import org.lineageos.settings.thermal.ThermalViewModel
+import org.lineageos.settings.ui.components.GarnetPageHeading
+import org.lineageos.settings.ui.components.GarnetTopAppBar
+import org.lineageos.settings.ui.theme.ExpressiveMotion
+import org.lineageos.settings.ui.theme.ExpressiveShapes
+import org.lineageos.settings.ui.theme.ExpressiveTypography
+import org.lineageos.settings.ui.theme.expressiveBounceClick
 
-/**
- * Main thermal settings screen (Compose).
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThermalScreen(
@@ -49,22 +83,20 @@ fun ThermalScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
-    
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    
+
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val showTitle by remember {
+        androidx.compose.runtime.derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 80
+        }
+    }
+
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.thermal_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBackPressed) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back"
-                        )
-                    }
-                },
+            GarnetTopAppBar(
+                title = stringResource(R.string.thermal_title),
+                showTitle = showTitle,
+                onBack = onBackPressed,
                 actions = {
                     IconButton(
                         onClick = { showResetDialog = true },
@@ -76,102 +108,121 @@ fun ThermalScreen(
                         )
                     }
                 },
-                scrollBehavior = scrollBehavior
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
-        Column(
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Master Switch Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Row(
+            item {
+                GarnetPageHeading(
+                    title = stringResource(R.string.thermal_title),
+                    subtitle = stringResource(R.string.garnet_thermal_engine_summary),
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
+
+            item {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .expressiveBounceClick(),
+                    shape = ExpressiveShapes.ShapeExtraLarge,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.thermal_enable),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.thermal_summary),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = uiState.isEnabled,
-                        onCheckedChange = { viewModel.toggleThermalEnabled(it) },
-                        thumbContent = {
-                            Icon(
-                                imageVector = if (uiState.isEnabled) Icons.Filled.Check else Icons.Filled.Close,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                            .semantics { role = Role.Switch },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.thermal_enable),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.thermal_summary),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    )
+                        Switch(
+                            checked = uiState.isEnabled,
+                            onCheckedChange = { viewModel.toggleThermalEnabled(it) },
+                            thumbContent = {
+                                Icon(
+                                    imageVector = if (uiState.isEnabled) Icons.Filled.Check else Icons.Filled.Close,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        )
+                    }
                 }
             }
-            
-            // Apps List
-            AnimatedVisibility(
-                visible = uiState.isEnabled,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Apps category header
-                    if (uiState.apps.isNotEmpty()) {
+
+            if (uiState.isEnabled) {
+                if (uiState.apps.isNotEmpty()) {
+                    item {
                         Text(
                             text = stringResource(R.string.thermal_apps_title),
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 32.dp, top = 16.dp, bottom = 8.dp)
+                            modifier = Modifier.padding(start = 8.dp, top = 8.dp, bottom = 4.dp)
                         )
-                        
+                    }
+
+                    item {
                         M3ExpressiveSearchBox(
                             query = uiState.searchQuery,
                             onQueryChange = { viewModel.updateSearchQuery(it) },
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
-                    
-                    when {
-                        uiState.isLoading -> {
+                }
+
+                when {
+                    uiState.isLoading -> {
+                        item {
                             LoadingState()
                         }
-                        uiState.error != null -> {
+                    }
+                    uiState.error != null -> {
+                        item {
                             ErrorState(error = uiState.error!!)
                         }
-                        uiState.apps.isEmpty() -> {
+                    }
+                    uiState.apps.isEmpty() -> {
+                        item {
                             EmptyState()
                         }
-                        else -> {
-                            val filteredApps = remember(uiState.apps, uiState.searchQuery) {
-                                if (uiState.searchQuery.isBlank()) {
-                                    uiState.apps
-                                } else {
-                                    uiState.apps.filter {
-                                        it.label.contains(uiState.searchQuery, ignoreCase = true) ||
-                                        it.packageName.contains(uiState.searchQuery, ignoreCase = true)
-                                    }
-                                }
+                    }
+                    else -> {
+                        val filteredApps = if (uiState.searchQuery.isBlank()) {
+                            uiState.apps
+                        } else {
+                            uiState.apps.filter {
+                                it.label.contains(uiState.searchQuery, ignoreCase = true) ||
+                                it.packageName.contains(uiState.searchQuery, ignoreCase = true)
                             }
-                            
-                            if (filteredApps.isEmpty() && uiState.searchQuery.isNotBlank()) {
+                        }
+
+                        if (filteredApps.isEmpty() && uiState.searchQuery.isNotBlank()) {
+                            item {
                                 Box(
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 48.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -180,23 +231,18 @@ fun ThermalScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(vertical = 8.dp)
-                                ) {
-                                    items(
-                                        items = filteredApps,
-                                        key = { it.packageName }
-                                    ) { app ->
-                                        AppThermalItem(
-                                            app = app,
-                                            onStateChanged = { newState ->
-                                                viewModel.updateAppThermalState(app.packageName, newState)
-                                            }
-                                        )
+                            }
+                        } else {
+                            items(
+                                items = filteredApps,
+                                key = { it.packageName }
+                            ) { app ->
+                                AppThermalItem(
+                                    app = app,
+                                    onStateChanged = { newState ->
+                                        viewModel.updateAppThermalState(app.packageName, newState)
                                     }
-                                }
+                                )
                             }
                         }
                     }
@@ -204,8 +250,7 @@ fun ThermalScreen(
             }
         }
     }
-    
-    // Reset confirmation dialog
+
     if (showResetDialog) {
         ResetConfirmationDialog(
             onConfirm = {
@@ -217,14 +262,17 @@ fun ThermalScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LoadingState() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
+            LoadingIndicator(color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.thermal_loading),
@@ -238,7 +286,9 @@ private fun LoadingState() {
 @Composable
 private fun ErrorState(error: String) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -254,12 +304,14 @@ private fun ErrorState(error: String) {
 @Composable
 private fun EmptyState() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 text = "No apps found",
@@ -286,18 +338,12 @@ fun M3ExpressiveSearchBox(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    val elevation by animateDpAsState(
-        targetValue = if (isFocused) 6.dp else 0.dp,
-        animationSpec = tween<androidx.compose.ui.unit.Dp>(durationMillis = 300, easing = FastOutSlowInEasing),
-        label = "search_elevation"
-    )
-
     val containerColor by animateColorAsState(
         targetValue = if (isFocused)
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            MaterialTheme.colorScheme.surfaceContainerHighest
         else
-            MaterialTheme.colorScheme.surfaceContainer,
-        animationSpec = tween<Color>(durationMillis = 300, easing = FastOutSlowInEasing),
+            MaterialTheme.colorScheme.surfaceContainerHigh,
+        animationSpec = ExpressiveMotion.effectsFast(),
         label = "search_color"
     )
 
@@ -306,10 +352,8 @@ fun M3ExpressiveSearchBox(
             .fillMaxWidth()
             .height(56.dp)
             .padding(horizontal = 16.dp),
-        shape = CircleShape,
-        color = containerColor,
-        tonalElevation = elevation,
-        shadowElevation = elevation
+        shape = ExpressiveShapes.ShapeFull,
+        color = containerColor
     ) {
         TextField(
             value = query,
@@ -319,8 +363,9 @@ fun M3ExpressiveSearchBox(
                 .onFocusChanged { isFocused = it.isFocused },
             placeholder = {
                 Text(
-                    text = "Search...",
-                    style = MaterialTheme.typography.bodyLarge
+                    text = "Search apps...",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingIcon = {
@@ -333,8 +378,8 @@ fun M3ExpressiveSearchBox(
             trailingIcon = {
                 AnimatedVisibility(
                     visible = query.isNotEmpty(),
-                    enter = fadeIn(animationSpec = tween(200)),
-                    exit = fadeOut(animationSpec = tween(200))
+                    enter = fadeIn(animationSpec = ExpressiveMotion.effectsFast()),
+                    exit = fadeOut(animationSpec = ExpressiveMotion.effectsFast())
                 ) {
                     IconButton(onClick = { onQueryChange("") }) {
                         Icon(
@@ -357,7 +402,7 @@ fun M3ExpressiveSearchBox(
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent
             ),
-            shape = CircleShape
+            shape = ExpressiveShapes.ShapeFull
         )
     }
 }
