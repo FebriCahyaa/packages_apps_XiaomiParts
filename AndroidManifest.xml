@@ -131,8 +131,30 @@
             android:exported="false" />
 
         <service
-            android:name=".chargeboost.ChargeBoostService"
+            android:name=".charging.ChargingService"
             android:exported="false" />
+
+        <service
+            android:name=".charging.BypassTileService"
+            android:label="@string/charge_bypass_title"
+            android:icon="@drawable/ic_charge"
+            android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".charging.BoostTileService"
+            android:label="@string/charge_boost_title"
+            android:icon="@drawable/ic_charge_boost"
+            android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
         <!-- Core Control -->
         <activity

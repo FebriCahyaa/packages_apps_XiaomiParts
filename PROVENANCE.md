@@ -45,6 +45,27 @@ branch `garnet-6.6`:
 The 6.6 thermal driver accepts any integer for `sconfig`, so the profile
 values `0, 4, 8, 9, 11, 12, 19, 20, 21` remain valid.
 
+## Charging subsystem integration
+
+Authored locally as `FEBRIAN RAHMAD CAHYA`:
+
+- Replaced `ChargeUtils`, `ChargeBoostUtils` and `ChargeBoostService` with
+  `charging/ChargingRepository.kt` and `charging/ChargingService.kt`.
+  Bypass and boost are now mutually exclusive, both have Quick Settings tiles,
+  the boost profile is re-applied at 0/2/5/12/25 s after plug-in and cleared on
+  unplug, and the temperature guard has a 42°C/40°C hysteresis.
+- `ChargingStatusCard` reports the negotiated `quick_charge_type`,
+  `fastchg_mode`, adapter ID, battery temperature and running kernel release.
+- The app prefers `/sys/class/qcom-battery/garnet_charge_status`, a read-only
+  attribute added to `qti_battery_charger_xiaomi.c` in our kernel, and falls
+  back to the individual nodes when it is absent.
+- Charging state is restored on boot only from the single boot receiver and
+  only when `KernelUtils.isKernel66()` is true.
+
+Nodes were cross-checked against `qti_battery_charger_xiaomi.c` on branch
+`garnet-6.6`; `quick_charge_type` values follow the driver enum
+`NORMAL/FAST/FLASH/TURBE/SUPER/MAX`.
+
 ## Build limitation
 
 No APK was produced in this environment: there is no AOSP checkout, Java or

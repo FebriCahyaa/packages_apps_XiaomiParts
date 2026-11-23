@@ -26,6 +26,26 @@ GPU toggle for `force_no_nap` is removed because 6.6 KGSL marks it deprecated
 | `FebriCahyaa/android_kernel_xiaomi_sm7435-modules` | `garnet-6.6` | Out-of-tree modules (KGSL, display, audio, camera, WLAN) |
 | `FebriCahyaa/android_kernel_xiaomi_sm7435-devicetrees` | `garnet-6.6` | Garnet DTS/DTSI |
 
+## Charging subsystem (this branch)
+
+Bypass charging and fast charging now share one source of truth in
+`src/org/lineageos/settings/charging/ChargingRepository.kt`:
+
+- **Bypass charging** writes `qcom-battery/input_suspend`. It can be restored on
+  boot and has a dedicated Quick Settings tile.
+- **Fast charge boost** writes `qcom-battery/sport_mode` and
+  `thermal_message/charger_temp` with the same retries and 42°C/40°C
+  temperature guard as HyperOS, plus a Quick Settings tile.
+- The two are mutually exclusive: enabling bypass clears the boost nodes, and
+  enabling boost releases bypass. This avoids asking the charger for more
+  current while its input is suspended.
+- `ChargingService` is registered once, applies the profile at 0/2/5/12/25 s
+  after plug-in, and clears the boost nodes on unplug.
+- Status comes from `quick_charge_type`, `fastchg_mode`, `adapter_id`,
+  `input_suspend`, `sport_mode` and the optional `garnet_charge_status` node
+  added to our kernel driver.
+- Experimental `pd_verifed` nudge remains opt-in.
+
 ## Features and their 6.6 kernel backing
 
 | Feature | Sysfs node | Provided by |

@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2025 The LineageOS Project
  *           (C) 2026 zylhdrXP
+ *           (C) 2026 FEBRIAN RAHMAD CAHYA
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -32,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,11 +43,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import org.lineageos.settings.R
+import org.lineageos.settings.charging.ChargingRepository
+import org.lineageos.settings.charging.ChargingStatusCard
 import org.lineageos.settings.ui.components.GarnetPageHeading
 import org.lineageos.settings.ui.components.GarnetTopAppBar
 import org.lineageos.settings.ui.components.ModernConfirmDialog
 import org.lineageos.settings.ui.components.ModernSettingSwitch
+import org.lineageos.settings.ui.components.connectedItemShape
 import org.lineageos.settings.ui.components.squishable
 
 @Composable
@@ -53,12 +60,18 @@ fun ChargeSettingsScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val chargeUtils = remember { ChargeUtils(context) }
+    val status by ChargingRepository.status.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
-
-    var isBypassEnabled by remember { mutableStateOf(chargeUtils.isBypassChargeEnabled()) }
-    val isSupported = remember { chargeUtils.isBypassChargeSupported() }
     var showWarningDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            ChargingRepository.refresh(context)
+            delay(1000)
+        }
+    }
+
+    val canToggle = status.kernel66 && status.supported
 
     Scaffold(
         topBar = {
@@ -97,28 +110,64 @@ fun ChargeSettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 24.dp),
-                    isBypassing = isBypassEnabled,
+                    isBypassing = status.bypass,
                 )
             }
 
-            ModernSettingSwitch(
-                title = stringResource(R.string.charge_bypass_title),
-                subtitle = if (isSupported) {
-                    stringResource(R.string.charge_bypass_summary)
-                } else {
-                    stringResource(R.string.charge_bypass_unavailable)
-                },
-                checked = isBypassEnabled,
-                onCheckedChange = { checked ->
-                    if (checked) {
-                        showWarningDialog = true
-                    } else {
-                        isBypassEnabled = false
-                        chargeUtils.enableBypassCharge(false)
-                    }
-                },
-                shape = MaterialTheme.shapes.extraLarge,
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                ModernSettingSwitch(
+                    title = stringResource(R.string.charge_bypass_title),
+                    subtitle = when {
+                        !status.kernel66 -> stringResource(R.string.charge_requires_66)
+                        !status.supported -> stringResource(R.string.charge_bypass_unavailable)
+                        else -> stringResource(R.string.charge_bypass_summary)
+                    },
+                    checked = status.bypass,
+                    onCheckedChange = { checked ->
+                        if (!canToggle) return@ModernSettingSwitch
+                        if (checked) {
+                            showWarningDialog = true
+                        } else {
+                            ChargingRepository.setBypass(context, false)
+                        }
+                    },
+                    shape = connectedItemShape(0, 2),
+                )
+
+                ModernSettingSwitch(
+                    title = stringResource(R.string.charge_restore_title),
+                    subtitle = stringResource(R.string.charge_restore_summary),
+                    checked = status.restoreOnBoot,
+                    onCheckedChange = { checked ->
+                        if (status.kernel66) {
+                            ChargingRepository.setRestoreOnBoot(context, checked)
+                        }
+                    },
+                    shape = connectedItemShape(1, 2),
+                )
+            }
+
+            if (status.bypass && status.boostRequested) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ),
+                ) {
+                    Text(
+                        text = stringResource(R.string.charge_bypass_boost_suspended),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
+
+            ChargingStatusCard(status = status)
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -157,8 +206,7 @@ fun ChargeSettingsScreen(
             message = stringResource(R.string.charge_bypass_warning),
             icon = Icons.Rounded.Warning,
             onConfirm = {
-                isBypassEnabled = true
-                chargeUtils.enableBypassCharge(true)
+                ChargingRepository.setBypass(context, true)
                 showWarningDialog = false
             },
             onDismiss = {

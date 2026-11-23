@@ -25,7 +25,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Display.HdrCapabilities;
 
-import org.lineageos.settings.chargeboost.ChargeBoostUtils;
+import org.lineageos.settings.charging.ChargingRepository;
 import org.lineageos.settings.thermal.ThermalUtils;
 import org.lineageos.settings.refreshrate.RefreshUtils;
 
@@ -65,8 +65,9 @@ public class BootCompletedReceiver extends BroadcastReceiver {
         ThermalUtils.getInstance(context).startService();
         RefreshUtils.startService(context);
 
-        // Restore the wired charge boost and keep it applied across charger plug-ins
-        ChargeBoostUtils.startService(context);
+        // Restore the persisted charging mode and keep boost applied across plug-ins.
+        // ChargingRepository.applyOnBoot() refuses to touch sysfs on a non-6.6 kernel.
+        ChargingRepository.INSTANCE.applyOnBoot(context);
     }
 
     @SuppressWarnings("AndroidFrameworkRequiresPermission")

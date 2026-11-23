@@ -187,4 +187,32 @@
     <string name="charge_boost_force_auth_title">Force charger authentication</string>
     <string name="charge_boost_force_auth_summary">Experimental. Marks the charger as verified when a genuine Xiaomi charger never reaches its fast mode. Leave off unless charging stays slow.</string>
     <string name="charge_boost_footer">The phone can get warmer while charging, so the boost pauses above 42°C and resumes below 40°C. The charger must support Xiaomi fast charging, and speed is capped at the phone\'s hardware limit.</string>
+    <!-- Charging integration (kernel 6.6) -->
+    <string name="charge_requires_66">Requires the 6.6 kernel for garnet</string>
+    <string name="charge_restore_title">Restore on boot</string>
+    <string name="charge_restore_summary">Re-apply the saved charging mode after boot</string>
+    <string name="charge_bypass_boost_suspended">Fast charge boost is paused while bypass charging is active</string>
+    <string name="charge_status_title">Charging status</string>
+    <string name="charge_status_source">Power source</string>
+    <string name="charge_status_plugged">Charger connected</string>
+    <string name="charge_status_unplugged">Battery only</string>
+    <string name="charge_status_quick_charge">Negotiated profile</string>
+    <string name="charge_status_fast_mode">Fast charge mode</string>
+    <string name="charge_status_adapter">Adapter ID</string>
+    <string name="charge_status_temperature">Battery temperature</string>
+    <string name="charge_status_kernel">Kernel</string>
+    <string name="charge_unknown">Unknown</string>
+    <string name="charge_quick_normal">Normal</string>
+    <string name="charge_quick_fast">Fast</string>
+    <string name="charge_quick_flash">Flash</string>
+    <string name="charge_quick_turbo">Turbo</string>
+    <string name="charge_quick_super">Super</string>
+    <string name="charge_quick_max">Max</string>
+    <string name="charge_temp_guard_title">Temperature guard</string>
+    <string name="charge_temp_guard_summary">Pause boost above 42°C and resume below 40°C</string>
+    <string name="charge_boost_off">Standard charging</string>
+    <string name="charge_boost_on">Fast charging boosted</string>
+    <string name="charge_boost_paused">Boost paused, battery is hot</string>
+    <string name="charge_boost_waiting">Waiting for charger handshake</string>
+    <string name="charge_boost_guard_hint">Thermal guard active (cutoff at 42°C)</string>
 </resources>

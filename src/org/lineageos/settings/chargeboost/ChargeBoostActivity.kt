@@ -1,6 +1,7 @@
 /*
  * SPDX-FileCopyrightText: The Evolution X Project
  *                         2026 zylhdrXP
+ *                         2026 FEBRIAN RAHMAD CAHYA
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,22 +37,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import org.lineageos.settings.R
+import org.lineageos.settings.charging.ChargingRepository
+import org.lineageos.settings.charging.ChargingStatusCard
 import org.lineageos.settings.ui.components.GarnetPageHeading
 import org.lineageos.settings.ui.components.GarnetTopAppBar
 import org.lineageos.settings.ui.components.ModernSettingSwitch
 import org.lineageos.settings.ui.components.connectedItemShape
 import org.lineageos.settings.ui.components.squishable
-import org.lineageos.settings.ui.theme.ExpressiveMotion
 import org.lineageos.settings.ui.theme.ExpressiveShapes
 import org.lineageos.settings.ui.theme.ExpressiveTheme
 
@@ -69,16 +71,37 @@ class ChargeBoostActivity : ComponentActivity() {
     }
 }
 
+@Composable
+private fun boostHeadline(boostRequested: Boolean, active: Boolean, hot: Boolean): String {
+    if (!boostRequested) return stringResource(R.string.charge_boost_off)
+    if (hot) return stringResource(R.string.charge_boost_paused)
+    if (!active) return stringResource(R.string.charge_boost_waiting)
+    return stringResource(R.string.charge_boost_on)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChargeBoostScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val supported = remember { ChargeBoostUtils.isSupported() }
-    var boost by remember { mutableStateOf(ChargeBoostUtils.isEnabled(context)) }
-    var forceAuth by remember { mutableStateOf(ChargeBoostUtils.isForceAuthEnabled(context)) }
+    val status by ChargingRepository.status.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            ChargingRepository.refresh(context)
+            delay(1000)
+        }
+    }
+
+    val supported = status.kernel66 && ChargingRepository.isBoostSupported()
+    val active = status.boostActive && !status.bypass && !status.hot
+    val headline by animateColorAsState(
+        targetValue = if (active) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surfaceContainerHighest,
+        label = "boost_headline",
+    )
 
     Scaffold(
         topBar = {
@@ -122,29 +145,32 @@ fun ChargeBoostScreen(
                     Box(
                         modifier = Modifier
                             .size(52.dp)
-                            .background(
-                                color = if (boost && supported) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                shape = ExpressiveShapes.ShapeMedium,
-                            ),
+                            .background(color = headline, shape = ExpressiveShapes.ShapeMedium),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Bolt,
                             contentDescription = null,
-                            tint = if (boost && supported) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(28.dp),
                         )
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (boost && supported) "Fast Charging Boosted" else "Standard Charging",
+                            text = boostHeadline(status.boostRequested, active, status.hot),
                             style = MaterialTheme.typography.titleMediumEmphasized,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = if (supported) "Thermal guard active (cutoff at 42°C)" else "Hardware unsupported",
+                            text = when {
+                                !status.kernel66 -> stringResource(R.string.charge_requires_66)
+                                !supported -> stringResource(R.string.charge_boost_unsupported)
+                                status.bypass -> stringResource(R.string.charge_bypass_boost_suspended)
+                                else -> stringResource(R.string.charge_boost_guard_hint)
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -158,33 +184,43 @@ fun ChargeBoostScreen(
             ) {
                 ModernSettingSwitch(
                     title = stringResource(R.string.charge_boost_title),
-                    subtitle = stringResource(
-                        if (supported) R.string.charge_boost_switch_summary
-                        else R.string.charge_boost_unsupported
-                    ),
-                    checked = boost && supported,
-                    onCheckedChange = { checked ->
-                        if (supported) {
-                            ChargeBoostUtils.setEnabled(context, checked)
-                            boost = checked
-                        }
+                    subtitle = when {
+                        !status.kernel66 -> stringResource(R.string.charge_requires_66)
+                        !supported -> stringResource(R.string.charge_boost_unsupported)
+                        status.bypass -> stringResource(R.string.charge_bypass_boost_suspended)
+                        else -> stringResource(R.string.charge_boost_switch_summary)
                     },
-                    shape = connectedItemShape(0, 2),
+                    checked = supported && status.boostRequested && !status.bypass,
+                    onCheckedChange = { checked ->
+                        if (supported) ChargingRepository.setBoost(context, checked)
+                    },
+                    shape = connectedItemShape(0, 3),
+                )
+
+                ModernSettingSwitch(
+                    title = stringResource(R.string.charge_temp_guard_title),
+                    subtitle = stringResource(R.string.charge_temp_guard_summary),
+                    checked = status.tempGuard,
+                    onCheckedChange = { checked ->
+                        if (supported) ChargingRepository.setTempGuard(context, checked)
+                    },
+                    shape = connectedItemShape(1, 3),
                 )
 
                 ModernSettingSwitch(
                     title = stringResource(R.string.charge_boost_force_auth_title),
                     subtitle = stringResource(R.string.charge_boost_force_auth_summary),
-                    checked = forceAuth && supported && boost,
+                    checked = status.boostRequested && status.forceAuth,
                     onCheckedChange = { checked ->
-                        if (supported && boost) {
-                            ChargeBoostUtils.setForceAuthEnabled(context, checked)
-                            forceAuth = checked
+                        if (supported && status.boostRequested) {
+                            ChargingRepository.setForceAuth(context, checked)
                         }
                     },
-                    shape = connectedItemShape(1, 2),
+                    shape = connectedItemShape(2, 3),
                 )
             }
+
+            ChargingStatusCard(status = status)
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
