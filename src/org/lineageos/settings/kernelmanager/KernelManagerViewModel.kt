@@ -44,7 +44,7 @@ class KernelManagerViewModel(application: Application) : AndroidViewModel(applic
     fun loadSettings() {
         val govs = KernelManagerUtils.getAvailableGovernors()
         val curGov = prefs.getString(PREF_GOVERNOR, null)
-            ?: KernelManagerUtils.getCurrentGovernor(KernelManagerUtils.EFFICIENCY_CLUSTER)
+            ?: KernelManagerUtils.defaultGovernor(KernelManagerUtils.EFFICIENCY_CLUSTER)
         
         val effFreqs = KernelManagerUtils.getAvailableFrequencies(KernelManagerUtils.EFFICIENCY_CLUSTER) ?: emptyList()
         val effMin = prefs.getString(PREF_EFF_MIN, null)
@@ -117,23 +117,22 @@ class KernelManagerViewModel(application: Application) : AndroidViewModel(applic
         prefs.edit().clear().putBoolean(PREF_APPLY_ON_BOOT, keepApplyOnBoot).apply()
         KernelManagerUtils.resetToDefaults()
 
-        // Update state directly with known defaults instead of reading
-        // back from sysfs, because the walt governor may immediately
-        // override scaling_min_freq with its own floor value.
-        val effFreqs = KernelManagerUtils.getAvailableFrequencies(KernelManagerUtils.EFFICIENCY_CLUSTER) ?: emptyList()
-        val perfFreqs = KernelManagerUtils.getAvailableFrequencies(KernelManagerUtils.PERFORMANCE_CLUSTER) ?: emptyList()
-        val defaultMinFreq = KernelManagerUtils.DEFAULT_MIN_FREQ
+        // Update state from the frequencies the 6.6 cpufreq driver actually exposes.
+        val effCluster = KernelManagerUtils.EFFICIENCY_CLUSTER
+        val perfCluster = KernelManagerUtils.PERFORMANCE_CLUSTER
+        val effFreqs = KernelManagerUtils.getAvailableFrequencies(effCluster) ?: emptyList()
+        val perfFreqs = KernelManagerUtils.getAvailableFrequencies(perfCluster) ?: emptyList()
 
         _state.update {
             it.copy(
                 availableGovernors = KernelManagerUtils.getAvailableGovernors(),
-                currentGovernor = KernelManagerUtils.DEFAULT_GOVERNOR,
+                currentGovernor = KernelManagerUtils.defaultGovernor(effCluster),
                 effAvailableFreqs = effFreqs,
-                effMinFreq = defaultMinFreq,
-                effMaxFreq = effFreqs.lastOrNull() ?: "0",
+                effMinFreq = KernelManagerUtils.defaultMinFrequency(effCluster),
+                effMaxFreq = KernelManagerUtils.defaultMaxFrequency(effCluster),
                 perfAvailableFreqs = perfFreqs,
-                perfMinFreq = defaultMinFreq,
-                perfMaxFreq = perfFreqs.lastOrNull() ?: "0",
+                perfMinFreq = KernelManagerUtils.defaultMinFrequency(perfCluster),
+                perfMaxFreq = KernelManagerUtils.defaultMaxFrequency(perfCluster),
                 applyOnBoot = keepApplyOnBoot
             )
         }

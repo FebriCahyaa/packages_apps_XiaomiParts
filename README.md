@@ -71,6 +71,9 @@ uses hidden APIs, so it must be part of the platform build. Make sure the
 device tree does not also provide a second `XiaomiParts` module (some garnet
 device trees embed one under `parts/`).
 
+All startup work goes through `GarnetBootReceiver`, which refuses to apply any
+saved setting when `System.getProperty("os.version")` is not a 6.6 release.
+
 ```xml
 <!-- local_manifest example -->
 <project path="packages/apps/XiaomiParts"

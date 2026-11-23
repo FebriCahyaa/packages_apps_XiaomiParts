@@ -66,6 +66,30 @@ Nodes were cross-checked against `qti_battery_charger_xiaomi.c` on branch
 `garnet-6.6`; `quick_charge_type` values follow the driver enum
 `NORMAL/FAST/FLASH/TURBE/SUPER/MAX`.
 
+## Kernel-6.6 hardening (P0)
+
+Authored locally as `FEBRIAN RAHMAD CAHYA`:
+
+- Replaced `BootCompletedReceiver`, `Startup` and `ApplyOnBootReceiver` with
+  `GarnetBootReceiver`. Boot work is gated by `KernelUtils.isKernel66()` and
+  runs on `Dispatchers.IO`. LOCKED_BOOT starts services, restores charging mode
+  and overrides HDR types; BOOT_COMPLETED restores saturation, CPU cores and
+  CPU/GPU settings.
+- `ThermalService` and `RefreshService` now use `START_NOT_STICKY` and register
+  their listeners once in `onCreate()`, so disabling thermal monitoring stays
+  disabled and restarts cannot duplicate receivers.
+- `KernelManagerUtils` no longer defaults to the absent `walt` governor or the
+  msm8996 `691200` frequency. Defaults now come from each cluster's
+  `scaling_available_governors` / `scaling_available_frequencies`, with
+  `schedutil` as the fallback, and writes are clamped to the available range.
+- Core control derives its core count from `/sys/devices/system/cpu/possible`,
+  keeps at least two little and one big core online, persists the chosen state
+  and restores it on boot.
+- Saturation settings share `SaturationController` between the UI and boot
+  restore instead of duplicating the SurfaceFlinger transaction code.
+- The two internal services are no longer exported, and `targetSdkVersion` is
+  35.
+
 ## Build limitation
 
 No APK was produced in this environment: there is no AOSP checkout, Java or

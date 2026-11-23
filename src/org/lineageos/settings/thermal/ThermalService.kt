@@ -20,6 +20,7 @@ import org.lineageos.settings.utils.Logging
 class ThermalService : Service() {
 
     private lateinit var thermalUtils: ThermalUtils
+    private var listenersRegistered = false
 
     private var currentApp = ""
         set(value) {
@@ -61,16 +62,7 @@ class ThermalService : Service() {
         Logging.d(TAG, "Creating service")
         thermalUtils = ThermalUtils.getInstance(this)
         super.onCreate()
-    }
-
-    override fun onDestroy() {
-        Logging.d(TAG, "Destroying service")
-        unregisterReceiver(intentReceiver)
-        runCatching { ActivityTaskManager.getService().unregisterTaskStackListener(taskListener) }
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Logging.d(TAG, "Starting service")
+        if (listenersRegistered) return
         runCatching { ActivityTaskManager.getService().registerTaskStackListener(taskListener) }
         registerReceiver(
             intentReceiver,
@@ -79,7 +71,23 @@ class ThermalService : Service() {
                 addAction(Intent.ACTION_SCREEN_ON)
             },
         )
-        return START_STICKY
+        listenersRegistered = true
+    }
+
+    override fun onDestroy() {
+        Logging.d(TAG, "Destroying service")
+        if (listenersRegistered) {
+            unregisterReceiver(intentReceiver)
+            runCatching { ActivityTaskManager.getService().unregisterTaskStackListener(taskListener) }
+            listenersRegistered = false
+        }
+        super.onDestroy()
+    }
+
+    // START_NOT_STICKY: ThermalUtils.stopService() must actually stop monitoring.
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Logging.d(TAG, "Starting service")
+        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

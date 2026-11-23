@@ -35,7 +35,7 @@ import android.os.RemoteException;
 public class RefreshService extends Service {
 
     private static final String TAG = "RefreshService";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private String mPreviousApp;
     private RefreshUtils mRefreshUtils;
@@ -65,7 +65,18 @@ public class RefreshService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (DEBUG) Log.d(TAG, "Starting service");
-        return START_STICKY;
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(mIntentReceiver);
+        try {
+            mActivityTaskManager.unregisterTaskStackListener(mTaskListener);
+        } catch (RemoteException ignored) {
+            // Task stack listener unavailable
+        }
+        super.onDestroy();
     }
 
     @Override

@@ -107,40 +107,15 @@ class CoreControlActivity : ComponentActivity() {
 }
 
 private const val TAG = "CoreControl"
-private const val NUM_CORES = 8
+private val NUM_CORES: Int get() = CoreControlUtils.coreCount
 
-private fun isCoreOnline(core: Int): Boolean {
-    val path = "/sys/devices/system/cpu/cpu$core/online"
-    if (!FileUtils.fileExists(path)) {
-        // CPU0 is usually always online and may not expose an 'online' sysfs node
-        return true
-    }
-    return runCatching {
-        FileUtils.readOneLine(path)?.trim() == "1"
-    }.getOrDefault(true)
-}
+private fun isCoreOnline(core: Int): Boolean = CoreControlUtils.isCoreOnline(core)
 
-private fun setCoreOnline(core: Int, online: Boolean): Boolean {
-    val path = "/sys/devices/system/cpu/cpu$core/online"
-    if (!FileUtils.fileExists(path)) return false
-    return runCatching {
-        FileUtils.writeLine(path, if (online) "1" else "0")
-    }.getOrDefault(false)
-}
+private fun setCoreOnline(core: Int, online: Boolean): Boolean =
+    CoreControlUtils.setCoreOnline(core, online)
 
-private fun canOfflineCore(core: Int, coreStates: Map<Int, Boolean>): Boolean {
-    // Cores 0-3 belong to the Little / Efficiency cluster
-    if (core in 0..3) {
-        var onlineCount = 0
-        for (i in 0..3) {
-            if (i != core && (coreStates[i] ?: isCoreOnline(i))) {
-                onlineCount++
-            }
-        }
-        return onlineCount >= 2
-    }
-    return true
-}
+private fun canOfflineCore(core: Int, coreStates: Map<Int, Boolean>): Boolean =
+    CoreControlUtils.canOffline(core, coreStates)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -287,13 +262,18 @@ fun CoreControlScreen(onBackPressed: () -> Unit) {
                                     if (!desired && !canOfflineCore(i, coreStates)) {
                                         Toast.makeText(
                                             context,
-                                            "At least 2 little cores must remain online",
+                                            if (i in CoreControlUtils.littleCores) {
+                                                "At least 2 little cores must remain online"
+                                            } else {
+                                                "At least 1 big core must remain online"
+                                            },
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     } else {
                                         val success = setCoreOnline(i, desired)
                                         if (success) {
                                             coreStates[i] = desired
+                                            CoreControlUtils.saveStates(context, coreStates)
                                         } else {
                                             coreStates[i] = isCoreOnline(i)
                                             Toast.makeText(
@@ -345,13 +325,18 @@ fun CoreControlScreen(onBackPressed: () -> Unit) {
                                     if (!desired && !canOfflineCore(i, coreStates)) {
                                         Toast.makeText(
                                             context,
-                                            "At least 2 little cores must remain online",
+                                            if (i in CoreControlUtils.littleCores) {
+                                                "At least 2 little cores must remain online"
+                                            } else {
+                                                "At least 1 big core must remain online"
+                                            },
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     } else {
                                         val success = setCoreOnline(i, desired)
                                         if (success) {
                                             coreStates[i] = desired
+                                            CoreControlUtils.saveStates(context, coreStates)
                                         } else {
                                             coreStates[i] = isCoreOnline(i)
                                             Toast.makeText(
