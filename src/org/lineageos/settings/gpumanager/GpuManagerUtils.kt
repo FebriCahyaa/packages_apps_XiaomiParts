@@ -39,10 +39,11 @@ class GpuManagerUtils {
         return runCatching { readFile(GPU_MODEL).trim() }.getOrDefault("Unknown GPU")
     }
 
+    /** 6.6 KGSL only ships msm-adreno-tz and gpubw_mon, both immutable. */
     fun getAvailableGovernors(): Array<String> {
         return runCatching {
             readFile(GPU_AVAILABLE_GOVERNORS).trim().split("\\s+".toRegex()).toTypedArray()
-        }.getOrDefault(arrayOf("msm-adreno-tz", "performance", "powersave", "simple_ondemand"))
+        }.getOrDefault(arrayOf("msm-adreno-tz", "gpubw_mon"))
     }
 
     fun getAvailableFrequencies(): Array<String>? {
@@ -100,8 +101,13 @@ class GpuManagerUtils {
         return runCatching { readFile(GPU_BUS_SPLIT).trim() == "1" }.getOrDefault(true)
     }
 
+    /**
+     * No-op on the 6.6 kernel: both Adreno governors are immutable, so writing
+     * this node is rejected. Kept for API compatibility with older panels.
+     */
+    @Suppress("UNUSED_PARAMETER")
     fun setGovernor(governor: String) {
-        runCatching { writeFile(GPU_GOVERNOR, governor) }
+        // Intentionally not writing GPU_GOVERNOR.
     }
 
     fun setFrequencyRange(minFreq: String, maxFreq: String) {

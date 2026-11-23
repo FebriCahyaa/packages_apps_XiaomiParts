@@ -224,8 +224,17 @@
     <string name="perf_balanced">Balanced</string>
     <string name="perf_performance">Performance</string>
     <string name="perf_desc_battery">CPU and GPU stay at their lowest frequencies. Best battery life, slower response under load.</string>
-    <string name="perf_desc_balanced">Default clocks with schedutil. Recommended for daily use.</string>
-    <string name="perf_desc_performance">CPU and GPU may use their highest frequencies. Faster, with extra heat and power use.</string>
+    <string name="perf_desc_balanced">Full advertised frequency range with schedutil on CPU and the Adreno TZ governor on GPU. Recommended for daily use.</string>
+    <string name="perf_desc_performance">CPU floor and GPU floor are raised while both keep their thermal-aware governors. Highest advertised clocks remain available, with extra heat and power use.</string>
+    <string name="perf_hw_title">Clock hardware</string>
+    <string name="perf_gpu_model">GPU</string>
+    <string name="perf_gpu_adreno710">Adreno 710 (SM7435)</string>
+    <string name="perf_gpu_current">GPU clock now</string>
+    <string name="perf_gpu_range">GPU clock range</string>
+    <string name="perf_gpu_governor">GPU governor</string>
+    <string name="perf_gpu_levels">Power levels</string>
+    <string name="perf_gpu_temp">GPU temperature</string>
+    <string name="perf_hw_footer">SM7435 clock tables come from Qualcomm EPSS hardware and the GPU speed-bin fuses. Garnet Parts never writes a frequency the driver does not advertise. The Adreno TZ governor is immutable in kernel 6.6, so profiles only change frequency bounds; thermal throttling stays in TrustZone.</string>
 
     <!-- Kernel information -->
     <string name="kernel_info_title">Kernel information</string>

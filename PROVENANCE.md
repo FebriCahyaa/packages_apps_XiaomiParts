@@ -133,8 +133,28 @@ Authored locally as `FEBRIAN RAHMAD CAHYA`:
   and configured by the kernel's manual `garnet_umm_setup.sh`.
 - Both features expose a Quick Settings tile and are restored from
   `GarnetBootReceiver` only on a 6.6 kernel.
-- `ui/components/GarnetStatusCard.kt` is now shared by the charging, display
-  and memory pages. `docs/UI_AUDIT.md` records the remaining legacy screens.
+- `ui/components/GarnetStatusCard.kt` is now shared by the charging, display,
+  memory and performance pages. `docs/UI_AUDIT.md` records the remaining legacy
+  screens.
+
+## CPU and GPU clock optimisation
+
+Authored locally as `FEBRIAN RAHMAD CAHYA`:
+
+- `performance/GpuClockController.kt` reads `gpu_available_frequencies` and maps
+  each preset to a devfreq min/max range. It never writes a frequency outside
+  the driver table, keeps independent GPU bus votes on, leaves clock forcing
+  off, and refuses the performance floor above 70 °C GPU temperature.
+- `performance/PerformanceManager.kt` keeps `schedutil` on both CPU clusters.
+  The performance profile raises the CPU floor to the 60th percentile of each
+  advertised table instead of pinning the static `performance` governor, which
+  would hold the top OPP while idle.
+- `GpuManagerUtils.setGovernor()` is now an intentional no-op:
+  `msm-adreno-tz` and `gpubw_mon` are `DEVFREQ_GOV_FLAG_IMMUTABLE` in this 6.6
+  KGSL tree. `GpuManagerViewModel` no longer writes sysfs on the main thread.
+- `performance/GpuStatusCard.kt` shows the live GPU clock, range, governor,
+  power-level count and temperature so the user can see what the kernel
+  actually permits.
 
 UMM is our project policy name; it is not an upstream Linux/Android standard.
 The app does not claim otherwise.

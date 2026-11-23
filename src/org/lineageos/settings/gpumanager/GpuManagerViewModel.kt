@@ -15,6 +15,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -133,12 +134,15 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun applySettings() {
         val state = _uiState.value
-        gpuUtils.setGovernor(state.currentGovernor)
-        gpuUtils.setFrequencyRange(state.currentMinFreq, state.currentMaxFreq)
-        gpuUtils.setForceClkOn(state.forceClkOn)
-        gpuUtils.setForceBusOn(state.forceBusOn)
-        gpuUtils.setForceRailOn(state.forceRailOn)
-        gpuUtils.setBusSplit(state.busSplit)
+        viewModelScope.launch(Dispatchers.IO) {
+            // The governor is immutable in 6.6 KGSL; only frequency bounds and
+            // clock/bus forcing flags are real controls.
+            gpuUtils.setFrequencyRange(state.currentMinFreq, state.currentMaxFreq)
+            gpuUtils.setForceClkOn(state.forceClkOn)
+            gpuUtils.setForceBusOn(state.forceBusOn)
+            gpuUtils.setForceRailOn(state.forceRailOn)
+            gpuUtils.setBusSplit(state.busSplit)
+        }
         prefs.edit()
             .putString(PREF_GOVERNOR, state.currentGovernor)
             .putString(PREF_MIN_FREQ, state.currentMinFreq)
@@ -152,8 +156,10 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
 
     fun resetSettings() {
         prefs.edit().clear().apply()
-        gpuUtils.resetToDefaults()
-        loadInitialState()
+        viewModelScope.launch(Dispatchers.IO) {
+            gpuUtils.resetToDefaults()
+            loadInitialState()
+        }
     }
 
     companion object {

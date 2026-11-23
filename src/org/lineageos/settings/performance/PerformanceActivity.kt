@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.lineageos.settings.R
@@ -65,7 +67,15 @@ fun PerformanceScreen(onBack: () -> Unit) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     var profile by remember { mutableStateOf(PerformanceManager.current(context)) }
+    var gpuSnapshot by remember { mutableStateOf(GpuClockController.Snapshot()) }
     val supported = KernelUtils.isKernel66()
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            gpuSnapshot = withContext(Dispatchers.IO) { GpuClockController.snapshot() }
+            delay(2000)
+        }
+    }
 
     val options = listOf(
         SelectOption(PerformanceProfile.BATTERY.key, stringResource(R.string.perf_battery)),
@@ -140,6 +150,23 @@ fun PerformanceScreen(onBack: () -> Unit) {
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
+
+            GpuStatusCard(snapshot = gpuSnapshot)
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.perf_hw_footer),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(16.dp),
                 )
             }

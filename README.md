@@ -80,6 +80,13 @@ Battery/balanced/performance presets only use frequencies advertised by the
 running kernel. The Kernel information page shows the release and which
 charging sysfs nodes are available.
 
+Performance presets keep schedutil on both CPU clusters and raise the frequency
+floor instead of pinning a static governor. GPU limits are taken from the
+frequencies KGSL advertises; the Adreno TZ governor is immutable on kernel 6.6,
+so only frequency bounds and bus votes are changed. The performance page shows
+the live GPU clock, range, governor and temperature, and refuses the performance
+floor above 70 °C.
+
 Reality Display Engine coordinates saturation, refresh rate and HDR into five
 picture modes. Unified Memory Manager reports LPDDR4X, LZ4 zram, VM reclaim and
 shared GPU buffers as one hierarchy; UFS 2.2 writeback stays manual through the

@@ -6,7 +6,6 @@
 package org.lineageos.settings.performance
 
 import android.content.Context
-import org.lineageos.settings.gpumanager.GpuManagerUtils
 import org.lineageos.settings.gpumanager.GpuManagerViewModel
 import org.lineageos.settings.kernelmanager.KernelManagerUtils
 import org.lineageos.settings.kernelmanager.KernelManagerViewModel
@@ -52,12 +51,11 @@ object PerformanceManager {
             KernelManagerUtils.EFFICIENCY_CLUSTER,
             KernelManagerUtils.PERFORMANCE_CLUSTER,
         )
-        val cpuGovernor = when (profile) {
-            PerformanceProfile.PERFORMANCE ->
-                if ("performance" in KernelManagerUtils.getAvailableGovernors()) "performance"
-                else KernelManagerUtils.defaultGovernor()
-            else -> KernelManagerUtils.defaultGovernor()
-        }
+        // Keep schedutil for every profile. A static "performance" governor
+        // pins the highest CPU OPP even when the screen is off or the phone is
+        // idle, which only adds heat on a 7s Gen 2. We raise the floor instead
+        // so the cores are already warm when work arrives.
+        val cpuGovernor = KernelManagerUtils.defaultGovernor()
 
         val prefs = context.getSharedPreferences(
             KernelManagerViewModel.PREFS_NAME, Context.MODE_PRIVATE)
@@ -72,7 +70,8 @@ object PerformanceManager {
                 ?: emptyList()
 
             val min = when (profile) {
-                PerformanceProfile.PERFORMANCE -> frequencies.getOrNull(frequencies.size / 2)
+                PerformanceProfile.PERFORMANCE ->
+                    frequencies.getOrNull((frequencies.size * 3 / 5).coerceIn(0, frequencies.lastIndex))
                 else -> frequencies.firstOrNull()
             }?.toString() ?: KernelManagerUtils.defaultMinFrequency(cluster)
 
@@ -97,38 +96,23 @@ object PerformanceManager {
     }
 
     private fun applyGpu(context: Context, profile: PerformanceProfile) {
-        val gpu = GpuManagerUtils()
-        val frequencies = gpu.getAvailableFrequencies()
-            ?.mapNotNull { it.toLongOrNull() }
-            ?.sorted()
-            ?: emptyList()
-        val governors = gpu.getAvailableGovernors()
+        GpuClockController.apply(profile)
+        val gpu = GpuClockController.snapshot()
 
-        val governor = when (profile) {
-            PerformanceProfile.PERFORMANCE ->
-                if ("performance" in governors) "performance" else governors.firstOrNull()
-            else -> governors.firstOrNull { it == "msm-adreno-tz" } ?: governors.firstOrNull()
-        } ?: return
-
-        val min = when (profile) {
-            PerformanceProfile.PERFORMANCE -> frequencies.lastOrNull()
-            else -> frequencies.firstOrNull()
-        }?.toString() ?: "0"
-        val max = when (profile) {
-            PerformanceProfile.BATTERY -> frequencies.getOrNull(frequencies.size / 3)
-            else -> frequencies.lastOrNull()
-        }?.toString() ?: "0"
-
-        gpu.setGovernor(governor)
-        gpu.setFrequencyRange(min, max)
-
+        // Mirror the result into the legacy GPU Manager prefs so both screens
+        // show the same limits. The governor is read-only in 6.6 KGSL and is
+        // therefore persisted as-is instead of being "set" to a fake value.
         context.getSharedPreferences(
             GpuManagerViewModel.PREFS_NAME, Context.MODE_PRIVATE
         ).edit()
-            .putString(GpuManagerViewModel.PREF_GOVERNOR, governor)
-            .putString(GpuManagerViewModel.PREF_MIN_FREQ, min)
-            .putString(GpuManagerViewModel.PREF_MAX_FREQ, max)
+            .putString(GpuManagerViewModel.PREF_GOVERNOR, gpu.governor)
+            .putString(GpuManagerViewModel.PREF_MIN_FREQ, gpu.minHz.toString())
+            .putString(GpuManagerViewModel.PREF_MAX_FREQ, gpu.maxHz.toString())
+            .putBoolean(GpuManagerViewModel.PREF_BUS_SPLIT, true)
             .putBoolean(GpuManagerViewModel.PREF_APPLY_ON_BOOT, true)
             .apply()
+
+        // When apply() is refused (hot GPU or missing sysfs) the current limits
+        // are mirrored instead, so no unsafe value is persisted.
     }
 }
