@@ -64,7 +64,9 @@ import org.lineageos.settings.charge.ChargeActivity
 import org.lineageos.settings.chargeboost.ChargeBoostActivity
 import org.lineageos.settings.corecontrol.CoreControlActivity
 import org.lineageos.settings.gpumanager.GpuManagerActivity
+import org.lineageos.settings.kernelinfo.KernelInfoActivity
 import org.lineageos.settings.kernelmanager.KernelManagerActivity
+import org.lineageos.settings.performance.PerformanceActivity
 import org.lineageos.settings.refreshrate.RefreshSettingsActivity
 import org.lineageos.settings.saturation.SaturationActivity
 import org.lineageos.settings.speaker.ClearSpeakerActivity
@@ -152,6 +154,18 @@ fun GarnetDashboard(onBackPressed: () -> Unit) {
                 context.getString(R.string.charge_boost_summary),
                 R.drawable.ic_charge_boost,
                 ChargeBoostActivity::class.java
+            ),
+            GarnetFeature(
+                context.getString(R.string.perf_title),
+                context.getString(R.string.garnet_perf_summary),
+                R.drawable.ic_cpu,
+                PerformanceActivity::class.java
+            ),
+            GarnetFeature(
+                context.getString(R.string.kernel_info_title),
+                context.getString(R.string.garnet_kernel_info_summary),
+                R.drawable.ic_kernel_manager,
+                KernelInfoActivity::class.java
             ),
         )
     }

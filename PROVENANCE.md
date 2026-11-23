@@ -90,6 +90,22 @@ Authored locally as `FEBRIAN RAHMAD CAHYA`:
 - The two internal services are no longer exported, and `targetSdkVersion` is
   35.
 
+## Performance presets and diagnostics
+
+Authored locally as `FEBRIAN RAHMAD CAHYA`:
+
+- `PerformanceManager` applies battery/balanced/performance presets using only
+  frequencies and governors exposed by the running 6.6 kernel. Each preset is
+  saved into the existing CPU/GPU preferences and enables their apply-on-boot
+  flags, so `GarnetBootReceiver` restores it without duplicate sysfs code.
+- `PerformanceTileService` cycles the three presets from Quick Settings.
+- `GpuSafety` suspends the GPU force-clock/bus/rail flags while the temperature
+  guard is holding boost back and restores them after cooldown. Disabling the
+  guard now clears the hot state instead of leaving hidden restrictions.
+- `KernelInfoActivity` reports the running release, board, CPU governor, GPU
+  model and which charging nodes are present, including the optional
+  `garnet_charge_status` attribute from our kernel.
+
 ## Build limitation
 
 No APK was produced in this environment: there is no AOSP checkout, Java or

@@ -68,10 +68,6 @@ class ChargingService : Service() {
     }
 
     private fun checkTemperature(intent: Intent) {
-        val guardEnabled = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            .getBoolean(PREF_TEMP_GUARD, true)
-        if (!guardEnabled) return
-
         val temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
         if (temp <= 0) return
 
@@ -80,8 +76,9 @@ class ChargingService : Service() {
             ChargingRepository.hot && temp <= ChargingRepository.TEMP_RESUME -> false
             else -> return
         }
-        Log.i(TAG, "Battery at ${temp / 10f}C, boost ${if (shouldBeHot) "held off" else "resumed"}")
+        Log.i(TAG, "Battery at ${temp / 10f}C, hot state $shouldBeHot")
         ChargingRepository.setHot(this, shouldBeHot)
+        if (shouldBeHot) GpuSafety.suspend(this) else GpuSafety.restore(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int =
@@ -97,8 +94,6 @@ class ChargingService : Service() {
 
     companion object {
         private const val TAG = "ChargingService"
-        private const val PREFS_NAME = "charging_prefs"
-        private const val PREF_TEMP_GUARD = "charge_temp_guard"
         private val APPLY_DELAYS_MS = longArrayOf(0, 2000, 5000, 12000, 25000)
 
         fun startIfNeeded(context: Context) {

@@ -215,4 +215,33 @@
     <string name="charge_boost_paused">Boost paused, battery is hot</string>
     <string name="charge_boost_waiting">Waiting for charger handshake</string>
     <string name="charge_boost_guard_hint">Thermal guard active (cutoff at 42°C)</string>
+    <!-- Performance profiles -->
+    <string name="perf_title">Performance profiles</string>
+    <string name="perf_summary">Apply a matched CPU and GPU preset in one tap</string>
+    <string name="garnet_perf_summary">Presets for battery life or maximum speed</string>
+    <string name="perf_profile_title">Active profile</string>
+    <string name="perf_battery">Battery</string>
+    <string name="perf_balanced">Balanced</string>
+    <string name="perf_performance">Performance</string>
+    <string name="perf_desc_battery">CPU and GPU stay at their lowest frequencies. Best battery life, slower response under load.</string>
+    <string name="perf_desc_balanced">Default clocks with schedutil. Recommended for daily use.</string>
+    <string name="perf_desc_performance">CPU and GPU may use their highest frequencies. Faster, with extra heat and power use.</string>
+
+    <!-- Kernel information -->
+    <string name="kernel_info_title">Kernel information</string>
+    <string name="kernel_info_summary">Running release and charging driver status</string>
+    <string name="garnet_kernel_info_summary">Build details and available sysfs nodes</string>
+    <string name="kernel_info_build">Build</string>
+    <string name="kernel_info_release">Release</string>
+    <string name="kernel_info_model">Model</string>
+    <string name="kernel_info_board">Board</string>
+    <string name="kernel_info_hardware">Hardware</string>
+    <string name="kernel_info_governor">CPU governor</string>
+    <string name="kernel_info_gpu">GPU</string>
+    <string name="kernel_info_nodes">Charging support</string>
+    <string name="kernel_info_bypass_node">Bypass node</string>
+    <string name="kernel_info_boost_node">Boost node</string>
+    <string name="kernel_info_aggregate_node">Status node</string>
+    <string name="kernel_info_yes">Available</string>
+    <string name="kernel_info_no">Missing</string>
 </resources>

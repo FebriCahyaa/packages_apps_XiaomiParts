@@ -96,7 +96,8 @@ fun ChargeBoostScreen(
     }
 
     val supported = status.kernel66 && ChargingRepository.isBoostSupported()
-    val active = status.boostActive && !status.bypass && !status.hot
+    val thermalBlocked = status.hot && status.tempGuard
+    val active = status.boostActive && !status.bypass && !thermalBlocked
     val headline by animateColorAsState(
         targetValue = if (active) MaterialTheme.colorScheme.primaryContainer
         else MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -159,7 +160,7 @@ fun ChargeBoostScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = boostHeadline(status.boostRequested, active, status.hot),
+                            text = boostHeadline(status.boostRequested, active, thermalBlocked),
                             style = MaterialTheme.typography.titleMediumEmphasized,
                             color = MaterialTheme.colorScheme.onSurface,
                         )

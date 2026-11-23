@@ -136,6 +136,31 @@
             </intent-filter>
         </service>
 
+        <!-- Performance profiles -->
+        <activity
+            android:name=".performance.PerformanceActivity"
+            android:label="@string/perf_title"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:exported="false" />
+
+        <service
+            android:name=".performance.PerformanceTileService"
+            android:label="@string/perf_title"
+            android:icon="@drawable/ic_cpu"
+            android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- Kernel information -->
+        <activity
+            android:name=".kernelinfo.KernelInfoActivity"
+            android:label="@string/kernel_info_title"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:exported="false" />
+
         <!-- Core Control -->
         <activity
             android:name=".corecontrol.CoreControlActivity"

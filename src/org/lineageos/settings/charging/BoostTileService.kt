@@ -30,7 +30,7 @@ class BoostTileService : TileService() {
             tile.state = when {
                 !state.kernel66 -> Tile.STATE_UNAVAILABLE
                 !state.boostRequested -> Tile.STATE_INACTIVE
-                state.hot || state.bypass -> Tile.STATE_INACTIVE
+                (state.hot && state.tempGuard) || state.bypass -> Tile.STATE_INACTIVE
                 else -> Tile.STATE_ACTIVE
             }
             tile.label = getString(R.string.charge_boost_title)

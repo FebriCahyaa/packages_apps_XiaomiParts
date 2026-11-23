@@ -74,6 +74,11 @@ device trees embed one under `parts/`).
 All startup work goes through `GarnetBootReceiver`, which refuses to apply any
 saved setting when `System.getProperty("os.version")` is not a 6.6 release.
 
+The dashboard also exposes three Quick Settings tiles (bypass charging, charge
+boost, performance profile), battery/balanced/performance presets that only use
+frequencies advertised by the running kernel, and a Kernel information page
+that shows the release and which charging sysfs nodes are available.
+
 ```xml
 <!-- local_manifest example -->
 <project path="packages/apps/XiaomiParts"

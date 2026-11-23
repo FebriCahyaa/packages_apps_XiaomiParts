@@ -102,6 +102,8 @@ object ChargingRepository {
 
     fun isBypassSupported(): Boolean = FileUtils.fileExists(NODE_INPUT_SUSPEND)
 
+    fun hasAggregateStatusNode(): Boolean = FileUtils.fileExists(NODE_GARNET_STATUS)
+
     /** Clear the nodes that ask the charger/thermal driver for the boosted profile. */
     fun clearBoostNodes() {
         writeInt(NODE_SPORT_MODE, 0)
@@ -111,9 +113,10 @@ object ChargingRepository {
     /** Apply the effective boost state to the driver and return true if a node was written. */
     fun applyBoostNodes(context: Context): Boolean {
         val p = prefs(context)
+        val thermalBlocked = p.getBoolean(PREF_TEMP_GUARD, true) && hot
         val on = p.getBoolean(PREF_BOOST, true) &&
             !p.getBoolean(PREF_BYPASS, false) &&
-            !hot &&
+            !thermalBlocked &&
             !isBypassActive()
 
         val sport = if (FileUtils.fileExists(NODE_SPORT_MODE)) {
@@ -137,7 +140,8 @@ object ChargingRepository {
     fun nudgeAuthentication(context: Context) {
         val p = prefs(context)
         if (!p.getBoolean(PREF_FORCE_AUTH, false)) return
-        if (!p.getBoolean(PREF_BOOST, true) || hot || isBypassActive()) return
+        val thermalBlocked = p.getBoolean(PREF_TEMP_GUARD, true) && hot
+        if (!p.getBoolean(PREF_BOOST, true) || thermalBlocked || isBypassActive()) return
         if (!FileUtils.fileExists(NODE_FASTCHG_MODE)) return
 
         val mode = readInt(NODE_FASTCHG_MODE) ?: return
