@@ -8,11 +8,18 @@ package org.lineageos.settings.performance
 import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.lineageos.settings.R
 import org.lineageos.settings.utils.KernelUtils
 
 /** Cycles battery -> balanced -> performance -> battery. */
 class PerformanceTileService : TileService() {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onStartListening() {
         super.onStartListening()
@@ -27,8 +34,10 @@ class PerformanceTileService : TileService() {
             PerformanceProfile.BALANCED -> PerformanceProfile.PERFORMANCE
             PerformanceProfile.PERFORMANCE -> PerformanceProfile.BATTERY
         }
-        PerformanceManager.set(this, next)
-        updateTile()
+        scope.launch {
+            withContext(Dispatchers.IO) { PerformanceManager.set(this@PerformanceTileService, next) }
+            updateTile()
+        }
     }
 
     private fun updateTile() {
@@ -43,6 +52,11 @@ class PerformanceTileService : TileService() {
             tile.icon = Icon.createWithResource(this, R.drawable.ic_cpu)
             tile.updateTile()
         }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 
     private fun PerformanceProfile.labelRes() = when (this) {

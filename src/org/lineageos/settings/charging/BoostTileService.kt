@@ -8,24 +8,33 @@ package org.lineageos.settings.charging
 import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.lineageos.settings.R
 
 class BoostTileService : TileService() {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onStartListening() {
         super.onStartListening()
-        updateTile()
+        scope.launch {
+            updateTile(ChargingRepository.refreshIo(this@BoostTileService))
+        }
     }
 
     override fun onClick() {
         super.onClick()
-        val state = ChargingRepository.refresh(this)
-        ChargingRepository.setBoost(this, !state.boostRequested)
-        updateTile()
+        scope.launch {
+            val before = ChargingRepository.refreshIo(this@BoostTileService)
+            ChargingRepository.setBoostIo(this@BoostTileService, !before.boostRequested)
+            updateTile(ChargingRepository.refreshIo(this@BoostTileService))
+        }
     }
 
-    private fun updateTile() {
-        val state = ChargingRepository.refresh(this)
+    private fun updateTile(state: ChargingStatus) {
         qsTile?.let { tile ->
             tile.state = when {
                 !state.kernel66 -> Tile.STATE_UNAVAILABLE
@@ -37,5 +46,10 @@ class BoostTileService : TileService() {
             tile.icon = Icon.createWithResource(this, R.drawable.ic_charge_boost)
             tile.updateTile()
         }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 }

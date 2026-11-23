@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.lineageos.settings.R
 import org.lineageos.settings.charging.ChargingRepository
 import org.lineageos.settings.charging.ChargingStatusCard
@@ -87,10 +89,11 @@ fun ChargeBoostScreen(
     val context = LocalContext.current
     val status by ChargingRepository.status.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         while (true) {
-            ChargingRepository.refresh(context)
+            ChargingRepository.refreshIo(context)
             delay(1000)
         }
     }
@@ -193,7 +196,7 @@ fun ChargeBoostScreen(
                     },
                     checked = supported && status.boostRequested && !status.bypass,
                     onCheckedChange = { checked ->
-                        if (supported) ChargingRepository.setBoost(context, checked)
+                        if (supported) scope.launch { ChargingRepository.setBoostIo(context, checked) }
                     },
                     shape = connectedItemShape(0, 3),
                 )
@@ -203,7 +206,7 @@ fun ChargeBoostScreen(
                     subtitle = stringResource(R.string.charge_temp_guard_summary),
                     checked = status.tempGuard,
                     onCheckedChange = { checked ->
-                        if (supported) ChargingRepository.setTempGuard(context, checked)
+                        if (supported) scope.launch { ChargingRepository.setTempGuardIo(context, checked) }
                     },
                     shape = connectedItemShape(1, 3),
                 )
@@ -214,7 +217,7 @@ fun ChargeBoostScreen(
                     checked = status.boostRequested && status.forceAuth,
                     onCheckedChange = { checked ->
                         if (supported && status.boostRequested) {
-                            ChargingRepository.setForceAuth(context, checked)
+                            scope.launch { ChargingRepository.setForceAuthIo(context, checked) }
                         }
                     },
                     shape = connectedItemShape(2, 3),

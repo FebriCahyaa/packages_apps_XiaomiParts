@@ -29,11 +29,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.lineageos.settings.R
 import org.lineageos.settings.ui.components.GarnetPageHeading
 import org.lineageos.settings.ui.components.GarnetTopAppBar
@@ -59,6 +63,7 @@ class PerformanceActivity : ComponentActivity() {
 fun PerformanceScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
     var profile by remember { mutableStateOf(PerformanceManager.current(context)) }
     val supported = KernelUtils.isKernel66()
 
@@ -106,8 +111,11 @@ fun PerformanceScreen(onBack: () -> Unit) {
                     enabled = supported,
                     onValueSelected = { value ->
                         val selected = PerformanceProfile.from(value)
-                        if (PerformanceManager.set(context, selected)) {
-                            profile = selected
+                        scope.launch {
+                            val applied = withContext(Dispatchers.IO) {
+                                PerformanceManager.set(context, selected)
+                            }
+                            if (applied) profile = selected
                         }
                     },
                     modifier = Modifier.padding(16.dp),

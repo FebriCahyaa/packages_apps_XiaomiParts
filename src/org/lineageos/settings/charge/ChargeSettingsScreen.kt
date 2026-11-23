@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.lineageos.settings.R
 import org.lineageos.settings.charging.ChargingRepository
 import org.lineageos.settings.charging.ChargingStatusCard
@@ -62,11 +64,12 @@ fun ChargeSettingsScreen(
     val context = LocalContext.current
     val status by ChargingRepository.status.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
     var showWarningDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         while (true) {
-            ChargingRepository.refresh(context)
+            ChargingRepository.refreshIo(context)
             delay(1000)
         }
     }
@@ -131,7 +134,7 @@ fun ChargeSettingsScreen(
                         if (checked) {
                             showWarningDialog = true
                         } else {
-                            ChargingRepository.setBypass(context, false)
+                            scope.launch { ChargingRepository.setBypassIo(context, false) }
                         }
                     },
                     shape = connectedItemShape(0, 2),
@@ -143,7 +146,7 @@ fun ChargeSettingsScreen(
                     checked = status.restoreOnBoot,
                     onCheckedChange = { checked ->
                         if (status.kernel66) {
-                            ChargingRepository.setRestoreOnBoot(context, checked)
+                            scope.launch { ChargingRepository.setRestoreOnBootIo(context, checked) }
                         }
                     },
                     shape = connectedItemShape(1, 2),
@@ -206,7 +209,7 @@ fun ChargeSettingsScreen(
             message = stringResource(R.string.charge_bypass_warning),
             icon = Icons.Rounded.Warning,
             onConfirm = {
-                ChargingRepository.setBypass(context, true)
+                scope.launch { ChargingRepository.setBypassIo(context, true) }
                 showWarningDialog = false
             },
             onDismiss = {

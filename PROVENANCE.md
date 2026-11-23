@@ -106,6 +106,18 @@ Authored locally as `FEBRIAN RAHMAD CAHYA`:
   model and which charging nodes are present, including the optional
   `garnet_charge_status` attribute from our kernel.
 
+## Main-thread I/O cleanup
+
+Authored locally as `FEBRIAN RAHMAD CAHYA`:
+
+- Added `refreshIo`, `setBypassIo`, `setBoostIo`, `setForceAuthIo`,
+  `setTempGuardIo` and `setRestoreOnBootIo` to `ChargingRepository`. Screens,
+  Quick Settings tiles and the performance tile write sysfs on
+  `Dispatchers.IO` and only update Compose/tile state back on the main thread.
+- `ChargingService` keeps its retry timer on the main `Handler` but performs
+  every node read/write in a cancelable IO scope. Unplugging now also restores
+  GPU force-on flags that were suspended by the temperature guard.
+
 ## Build limitation
 
 No APK was produced in this environment: there is no AOSP checkout, Java or

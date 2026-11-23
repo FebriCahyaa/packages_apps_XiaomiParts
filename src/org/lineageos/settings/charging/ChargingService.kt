@@ -15,6 +15,11 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Keeps the boosted charge profile applied across charger handshakes and pauses it when the
@@ -22,12 +27,15 @@ import android.util.Log
  */
 class ChargingService : Service() {
     private val handler = Handler(Looper.getMainLooper())
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val applyProfile = Runnable {
-        val state = ChargingRepository.refresh(this)
-        if (!state.plugged || state.bypass) return@Runnable
-        ChargingRepository.applyBoostNodes(this)
-        ChargingRepository.nudgeAuthentication(this)
+        ioScope.launch {
+            val state = ChargingRepository.refresh(this@ChargingService)
+            if (!state.plugged || state.bypass) return@launch
+            ChargingRepository.applyBoostNodes(this@ChargingService)
+            ChargingRepository.nudgeAuthentication(this@ChargingService)
+        }
     }
 
     private val receiver = object : BroadcastReceiver() {
@@ -62,23 +70,29 @@ class ChargingService : Service() {
 
     private fun onUnplugged() {
         handler.removeCallbacks(applyProfile)
-        ChargingRepository.setHot(this, false)
-        ChargingRepository.clearBoostNodes()
-        ChargingRepository.refresh(this)
+        ioScope.launch {
+            val wasHot = ChargingRepository.hot
+            ChargingRepository.setHot(this@ChargingService, false)
+            if (wasHot) GpuSafety.restore(this@ChargingService)
+            ChargingRepository.clearBoostNodes()
+            ChargingRepository.refresh(this@ChargingService)
+        }
     }
 
     private fun checkTemperature(intent: Intent) {
         val temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
         if (temp <= 0) return
-
-        val shouldBeHot = when {
-            !ChargingRepository.hot && temp >= ChargingRepository.TEMP_HOT -> true
-            ChargingRepository.hot && temp <= ChargingRepository.TEMP_RESUME -> false
-            else -> return
+        ioScope.launch {
+            val shouldBeHot = when {
+                !ChargingRepository.hot && temp >= ChargingRepository.TEMP_HOT -> true
+                ChargingRepository.hot && temp <= ChargingRepository.TEMP_RESUME -> false
+                else -> return@launch
+            }
+            Log.i(TAG, "Battery at ${temp / 10f}C, hot state $shouldBeHot")
+            ChargingRepository.setHot(this@ChargingService, shouldBeHot)
+            if (shouldBeHot) GpuSafety.suspend(this@ChargingService)
+            else GpuSafety.restore(this@ChargingService)
         }
-        Log.i(TAG, "Battery at ${temp / 10f}C, hot state $shouldBeHot")
-        ChargingRepository.setHot(this, shouldBeHot)
-        if (shouldBeHot) GpuSafety.suspend(this) else GpuSafety.restore(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int =
@@ -87,6 +101,7 @@ class ChargingService : Service() {
     override fun onDestroy() {
         handler.removeCallbacks(applyProfile)
         unregisterReceiver(receiver)
+        ioScope.cancel()
         super.onDestroy()
     }
 

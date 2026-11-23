@@ -11,8 +11,10 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.BatteryManager
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.withContext
 import org.lineageos.settings.utils.FileUtils
 import org.lineageos.settings.utils.KernelUtils
 
@@ -268,4 +270,24 @@ object ChargingRepository {
         _status.value = status
         return status
     }
+
+    // Sysfs wrappers for callers on the main thread. The synchronous variants remain for
+    // ChargingService and the boot receiver, which already run on Dispatchers.IO.
+    suspend fun refreshIo(context: Context): ChargingStatus =
+        withContext(Dispatchers.IO) { refresh(context) }
+
+    suspend fun setBypassIo(context: Context, enabled: Boolean): Boolean =
+        withContext(Dispatchers.IO) { setBypass(context, enabled) }
+
+    suspend fun setBoostIo(context: Context, enabled: Boolean) =
+        withContext(Dispatchers.IO) { setBoost(context, enabled) }
+
+    suspend fun setForceAuthIo(context: Context, enabled: Boolean) =
+        withContext(Dispatchers.IO) { setForceAuth(context, enabled) }
+
+    suspend fun setTempGuardIo(context: Context, enabled: Boolean) =
+        withContext(Dispatchers.IO) { setTempGuard(context, enabled) }
+
+    suspend fun setRestoreOnBootIo(context: Context, enabled: Boolean) =
+        withContext(Dispatchers.IO) { setRestoreOnBoot(context, enabled) }
 }
