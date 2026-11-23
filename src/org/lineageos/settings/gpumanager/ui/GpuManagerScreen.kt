@@ -260,17 +260,6 @@ fun GpuManagerScreen(
             item {
                 AnimatedEntrance(visible = visible, index = 8) {
                     GpuSwitchPreference(
-                        title = stringResource(R.string.gpu_force_no_nap_title),
-                        summary = stringResource(R.string.gpu_force_no_nap_summary),
-                        checked = uiState.forceNoNap,
-                        onCheckedChange = { viewModel.setForceNoNap(it) }
-                    )
-                }
-            }
-
-            item {
-                AnimatedEntrance(visible = visible, index = 9) {
-                    GpuSwitchPreference(
                         title = stringResource(R.string.gpu_bus_split_title),
                         summary = stringResource(R.string.gpu_bus_split_summary),
                         checked = uiState.busSplit,
@@ -280,13 +269,13 @@ fun GpuManagerScreen(
             }
 
             item {
-                AnimatedEntrance(visible = visible, index = 10) {
+                AnimatedEntrance(visible = visible, index = 9) {
                     CategoryHeader(stringResource(R.string.gpu_thermal_title))
                 }
             }
 
             item {
-                AnimatedEntrance(visible = visible, index = 11) {
+                AnimatedEntrance(visible = visible, index = 10) {
                     InfoItem(
                         title = stringResource(R.string.gpu_thermal_pwrlevel_title),
                         value = "Level ${uiState.thermalPowerLevel}",
@@ -296,7 +285,7 @@ fun GpuManagerScreen(
             }
 
             item {
-                AnimatedEntrance(visible = visible, index = 12) {
+                AnimatedEntrance(visible = visible, index = 11) {
                     GpuSwitchPreference(
                         title = stringResource(R.string.apply_on_boot_title),
                         summary = stringResource(R.string.apply_on_boot_summary),

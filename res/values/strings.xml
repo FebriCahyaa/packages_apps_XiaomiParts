@@ -138,8 +138,6 @@
     <string name="gpu_force_bus_on_summary">Keep GPU bus always on</string>
     <string name="gpu_force_rail_on_title">Force Rail On</string>
     <string name="gpu_force_rail_on_summary">Keep GPU power rail always on</string>
-    <string name="gpu_force_no_nap_title">Force No Nap</string>
-    <string name="gpu_force_no_nap_summary">Disable GPU napping between frames</string>
     <string name="gpu_bus_split_title">Bus Split</string>
     <string name="gpu_bus_split_summary">Enable GPU bus splitting</string>
     <string name="gpu_thermal_title">Thermal Status</string>

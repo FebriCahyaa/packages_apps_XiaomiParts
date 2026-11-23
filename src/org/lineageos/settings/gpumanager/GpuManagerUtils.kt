@@ -32,7 +32,6 @@ class GpuManagerUtils {
         private const val GPU_FORCE_CLK_ON = "$GPU_BASE_PATH/force_clk_on"
         private const val GPU_FORCE_BUS_ON = "$GPU_BASE_PATH/force_bus_on"
         private const val GPU_FORCE_RAIL_ON = "$GPU_BASE_PATH/force_rail_on"
-        private const val GPU_FORCE_NO_NAP = "$GPU_BASE_PATH/force_no_nap"
         private const val GPU_BUS_SPLIT = "$GPU_BASE_PATH/bus_split"
     }
 
@@ -97,10 +96,6 @@ class GpuManagerUtils {
         return runCatching { readFile(GPU_FORCE_RAIL_ON).trim() == "1" }.getOrDefault(false)
     }
 
-    fun getForceNoNap(): Boolean {
-        return runCatching { readFile(GPU_FORCE_NO_NAP).trim() == "1" }.getOrDefault(true)
-    }
-
     fun getBusSplit(): Boolean {
         return runCatching { readFile(GPU_BUS_SPLIT).trim() == "1" }.getOrDefault(true)
     }
@@ -128,10 +123,6 @@ class GpuManagerUtils {
         runCatching { writeFile(GPU_FORCE_RAIL_ON, if (enabled) "1" else "0") }
     }
 
-    fun setForceNoNap(enabled: Boolean) {
-        runCatching { writeFile(GPU_FORCE_NO_NAP, if (enabled) "1" else "0") }
-    }
-
     fun setBusSplit(enabled: Boolean) {
         runCatching { writeFile(GPU_BUS_SPLIT, if (enabled) "1" else "0") }
     }
@@ -153,7 +144,6 @@ class GpuManagerUtils {
         setForceClkOn(false)
         setForceBusOn(false)
         setForceRailOn(false)
-        setForceNoNap(true)
         setBusSplit(true)
     }
 

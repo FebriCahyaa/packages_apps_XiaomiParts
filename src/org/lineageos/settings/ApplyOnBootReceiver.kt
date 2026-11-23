@@ -3,17 +3,28 @@ package org.lineageos.settings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import org.lineageos.settings.gpumanager.GpuManagerUtils
 import org.lineageos.settings.gpumanager.GpuManagerViewModel
 import org.lineageos.settings.kernelmanager.KernelManagerUtils
 import org.lineageos.settings.kernelmanager.KernelManagerViewModel
+import org.lineageos.settings.utils.KernelUtils
 
 class ApplyOnBootReceiver : BroadcastReceiver() {
+
+    companion object {
+        private const val TAG = "ApplyOnBootReceiver"
+    }
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_LOCKED_BOOT_COMPLETED -> {
+                val release = System.getProperty("os.version", "unknown")
+                if (!KernelUtils.isKernel66()) {
+                    Log.i(TAG, "Kernel $release is not 6.6, skipping saved settings")
+                    return
+                }
                 applyKernelSettings(context)
                 applyGpuSettings(context)
             }
@@ -63,7 +74,6 @@ class ApplyOnBootReceiver : BroadcastReceiver() {
         utils.setForceClkOn(prefs.getBoolean(GpuManagerViewModel.PREF_FORCE_CLK_ON, false))
         utils.setForceBusOn(prefs.getBoolean(GpuManagerViewModel.PREF_FORCE_BUS_ON, false))
         utils.setForceRailOn(prefs.getBoolean(GpuManagerViewModel.PREF_FORCE_RAIL_ON, false))
-        utils.setForceNoNap(prefs.getBoolean(GpuManagerViewModel.PREF_FORCE_NO_NAP, true))
         utils.setBusSplit(prefs.getBoolean(GpuManagerViewModel.PREF_BUS_SPLIT, true))
     }
 }

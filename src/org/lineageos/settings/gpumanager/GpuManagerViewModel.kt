@@ -41,7 +41,6 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
         val forceClkOn: Boolean = false,
         val forceBusOn: Boolean = false,
         val forceRailOn: Boolean = false,
-        val forceNoNap: Boolean = false,
         val busSplit: Boolean = false,
         val applyOnBoot: Boolean = false
     )
@@ -72,7 +71,6 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
                 forceClkOn = prefs.getBoolean(PREF_FORCE_CLK_ON, gpuUtils.getForceClkOn()),
                 forceBusOn = prefs.getBoolean(PREF_FORCE_BUS_ON, gpuUtils.getForceBusOn()),
                 forceRailOn = prefs.getBoolean(PREF_FORCE_RAIL_ON, gpuUtils.getForceRailOn()),
-                forceNoNap = prefs.getBoolean(PREF_FORCE_NO_NAP, gpuUtils.getForceNoNap()),
                 busSplit = prefs.getBoolean(PREF_BUS_SPLIT, gpuUtils.getBusSplit()),
                 applyOnBoot = prefs.getBoolean(PREF_APPLY_ON_BOOT, false)
             )
@@ -124,10 +122,6 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.update { it.copy(forceRailOn = enabled) }
     }
 
-    fun setForceNoNap(enabled: Boolean) {
-        _uiState.update { it.copy(forceNoNap = enabled) }
-    }
-
     fun setBusSplit(enabled: Boolean) {
         _uiState.update { it.copy(busSplit = enabled) }
     }
@@ -144,7 +138,6 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
         gpuUtils.setForceClkOn(state.forceClkOn)
         gpuUtils.setForceBusOn(state.forceBusOn)
         gpuUtils.setForceRailOn(state.forceRailOn)
-        gpuUtils.setForceNoNap(state.forceNoNap)
         gpuUtils.setBusSplit(state.busSplit)
         prefs.edit()
             .putString(PREF_GOVERNOR, state.currentGovernor)
@@ -153,7 +146,6 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
             .putBoolean(PREF_FORCE_CLK_ON, state.forceClkOn)
             .putBoolean(PREF_FORCE_BUS_ON, state.forceBusOn)
             .putBoolean(PREF_FORCE_RAIL_ON, state.forceRailOn)
-            .putBoolean(PREF_FORCE_NO_NAP, state.forceNoNap)
             .putBoolean(PREF_BUS_SPLIT, state.busSplit)
             .apply()
     }
@@ -172,7 +164,6 @@ class GpuManagerViewModel(application: Application) : AndroidViewModel(applicati
         const val PREF_FORCE_CLK_ON = "force_clk_on"
         const val PREF_FORCE_BUS_ON = "force_bus_on"
         const val PREF_FORCE_RAIL_ON = "force_rail_on"
-        const val PREF_FORCE_NO_NAP = "force_no_nap"
         const val PREF_BUS_SPLIT = "bus_split"
         const val PREF_APPLY_ON_BOOT = "apply_on_boot"
     }

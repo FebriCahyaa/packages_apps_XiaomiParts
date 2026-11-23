@@ -55,10 +55,6 @@
             android:title="@string/gpu_force_rail_on_title"
             android:summary="@string/gpu_force_rail_on_summary" />
         <SwitchPreferenceCompat
-            android:key="gpu_force_no_nap"
-            android:title="@string/gpu_force_no_nap_title"
-            android:summary="@string/gpu_force_no_nap_summary" />
-        <SwitchPreferenceCompat
             android:key="gpu_bus_split"
             android:title="@string/gpu_bus_split_title"
             android:summary="@string/gpu_bus_split_summary" />
