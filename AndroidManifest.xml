@@ -154,6 +154,42 @@
             </intent-filter>
         </service>
 
+        <!-- Reality Display Engine -->
+        <activity
+            android:name=".display.RealityDisplayActivity"
+            android:label="@string/rde_title"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:exported="false" />
+
+        <service
+            android:name=".display.RealityDisplayTileService"
+            android:label="@string/rde_title"
+            android:icon="@drawable/ic_saturation_tile"
+            android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- Unified Memory Management -->
+        <activity
+            android:name=".memory.UnifiedMemoryActivity"
+            android:label="@string/umm_title"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:exported="false" />
+
+        <service
+            android:name=".memory.UnifiedMemoryTileService"
+            android:label="@string/umm_title"
+            android:icon="@drawable/ic_kernel_manager"
+            android:exported="true"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <!-- Kernel information -->
         <activity
             android:name=".kernelinfo.KernelInfoActivity"

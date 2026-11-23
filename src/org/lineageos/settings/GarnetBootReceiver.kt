@@ -21,10 +21,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.lineageos.settings.charging.ChargingRepository
 import org.lineageos.settings.corecontrol.CoreControlUtils
+import org.lineageos.settings.display.RealityDisplayEngine
 import org.lineageos.settings.gpumanager.GpuManagerUtils
 import org.lineageos.settings.gpumanager.GpuManagerViewModel
 import org.lineageos.settings.kernelmanager.KernelManagerUtils
 import org.lineageos.settings.kernelmanager.KernelManagerViewModel
+import org.lineageos.settings.memory.UnifiedMemoryManager
 import org.lineageos.settings.refreshrate.RefreshUtils
 import org.lineageos.settings.saturation.SaturationController
 import org.lineageos.settings.thermal.ThermalUtils
@@ -63,6 +65,8 @@ class GarnetBootReceiver : BroadcastReceiver() {
             } else {
                 // SurfaceFlinger and cpufreq sysfs are ready after unlock.
                 SaturationController(context).restore()
+                RealityDisplayEngine.applyOnBoot(context)
+                UnifiedMemoryManager.applyOnBoot(context)
                 CoreControlUtils.applySaved(context)
                 applyKernelSettings(context)
                 applyGpuSettings(context)

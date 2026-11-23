@@ -74,10 +74,16 @@ device trees embed one under `parts/`).
 All startup work goes through `GarnetBootReceiver`, which refuses to apply any
 saved setting when `System.getProperty("os.version")` is not a 6.6 release.
 
-The dashboard also exposes three Quick Settings tiles (bypass charging, charge
-boost, performance profile), battery/balanced/performance presets that only use
-frequencies advertised by the running kernel, and a Kernel information page
-that shows the release and which charging sysfs nodes are available.
+The dashboard also exposes Quick Settings tiles for bypass charging, charge
+boost, performance profile, Reality Display Engine and Unified Memory Manager.
+Battery/balanced/performance presets only use frequencies advertised by the
+running kernel. The Kernel information page shows the release and which
+charging sysfs nodes are available.
+
+Reality Display Engine coordinates saturation, refresh rate and HDR into five
+picture modes. Unified Memory Manager reports LPDDR4X, LZ4 zram, VM reclaim and
+shared GPU buffers as one hierarchy; UFS 2.2 writeback stays manual through the
+kernel helper. See `docs/UI_AUDIT.md` for the Material 3 audit.
 
 ```xml
 <!-- local_manifest example -->

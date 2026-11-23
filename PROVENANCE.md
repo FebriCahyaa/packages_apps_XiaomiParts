@@ -118,6 +118,27 @@ Authored locally as `FEBRIAN RAHMAD CAHYA`:
   every node read/write in a cancelable IO scope. Unplugging now also restores
   GPU force-on flags that were suspended by the temperature guard.
 
+## Reality Display Engine and Unified Memory Manager
+
+Authored locally as `FEBRIAN RAHMAD CAHYA`:
+
+- `display/RealityDisplayEngine.kt` applies five picture presets across
+  SurfaceFlinger saturation, `peak_refresh_rate`, `min_refresh_rate` and HDR
+  output. It reads `garnet_caps` and `dynamic_fps` from the Xiaomi DSI display
+  module so unsupported effects are reported instead of assumed.
+- `memory/UnifiedMemoryManager.kt` implements Tier 0-2 and Tier 4 of the UMM
+  contract in `android_kernel_xiaomi_garnet_6.6/UMM.md`: it reports physical
+  memory, LZ4 zram, VM reclaim and dmabuf usage, and applies reclaim profiles
+  through `/proc/sys/vm`. Tier 3 (zram writeback to UFS 2.2) is read-only here
+  and configured by the kernel's manual `garnet_umm_setup.sh`.
+- Both features expose a Quick Settings tile and are restored from
+  `GarnetBootReceiver` only on a 6.6 kernel.
+- `ui/components/GarnetStatusCard.kt` is now shared by the charging, display
+  and memory pages. `docs/UI_AUDIT.md` records the remaining legacy screens.
+
+UMM is our project policy name; it is not an upstream Linux/Android standard.
+The app does not claim otherwise.
+
 ## Build limitation
 
 No APK was produced in this environment: there is no AOSP checkout, Java or

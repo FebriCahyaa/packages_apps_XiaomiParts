@@ -244,4 +244,54 @@
     <string name="kernel_info_aggregate_node">Status node</string>
     <string name="kernel_info_yes">Available</string>
     <string name="kernel_info_no">Missing</string>
+    <!-- Reality Display Engine -->
+    <string name="rde_title">Reality Display Engine</string>
+    <string name="rde_summary">Picture modes for the 6.6 display stack</string>
+    <string name="garnet_rde_summary">Saturation, refresh and HDR in one mode</string>
+    <string name="rde_mode_title">Picture mode</string>
+    <string name="rde_mode_adaptive">Adaptive</string>
+    <string name="rde_mode_vivid">Vivid</string>
+    <string name="rde_mode_natural">Natural</string>
+    <string name="rde_mode_cinematic">Cinematic</string>
+    <string name="rde_mode_reading">Reading</string>
+    <string name="rde_status_title">Live display state</string>
+    <string name="rde_status_kernel">Kernel gate</string>
+    <string name="rde_status_saturation">Saturation</string>
+    <string name="rde_status_peak">Peak refresh</string>
+    <string name="rde_status_min">Minimum refresh</string>
+    <string name="rde_status_hdr">HDR output</string>
+    <string name="rde_status_lhbm">Local HBM panel</string>
+    <string name="rde_status_fps">Panel FPS</string>
+    <string name="rde_yes">On</string>
+    <string name="rde_no">Off</string>
+    <string name="rde_footer">Modes use the same SurfaceFlinger and DisplayManager interfaces as the individual display settings. Per-app refresh profiles may still override the cap while an app is active.</string>
+
+    <!-- Unified Memory Management -->
+    <string name="umm_title">Unified Memory Manager</string>
+    <string name="umm_summary">LPDDR4X, zram and UFS 2.2 as one hierarchy</string>
+    <string name="garnet_umm_summary">Tune reclaim across RAM and UFS</string>
+    <string name="umm_profile_title">Reclaim profile</string>
+    <string name="umm_conservative">Conservative</string>
+    <string name="umm_balanced">Balanced</string>
+    <string name="umm_performance">Performance</string>
+    <string name="umm_compact_title">Compact memory now</string>
+    <string name="umm_compact_summary">Run one kernel compaction pass</string>
+    <string name="umm_physical_title">Physical memory</string>
+    <string name="umm_total">Total</string>
+    <string name="umm_available">Available</string>
+    <string name="umm_dmabuf">Shared GPU buffers</string>
+    <string name="umm_zram_title">Compressed RAM</string>
+    <string name="umm_algorithm">Compressor</string>
+    <string name="umm_orig">Original data</string>
+    <string name="umm_compressed">Compressed data</string>
+    <string name="umm_ratio">Ratio</string>
+    <string name="umm_swap_used">Swap used</string>
+    <string name="umm_ufs_title">UFS 2.2 tier</string>
+    <string name="umm_writeback">Writeback</string>
+    <string name="umm_backing">Backing device</string>
+    <string name="umm_limit">Writeback limit</string>
+    <string name="umm_swappiness">Swappiness</string>
+    <string name="umm_compaction">Proactiveness</string>
+    <string name="umm_none">Not configured</string>
+    <string name="umm_footer">UFS writeback is deliberately manual: use garnet_umm_setup.sh from a root shell after checking that the backing block device is free. This page only reports its state and controls VM reclaim.</string>
 </resources>
